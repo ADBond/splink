@@ -77,7 +77,8 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: benchmark-markdown-comment-pr-${{ env.PR_NUMBER }}
-          path: benchmark_comment_markdown.md
+          path: .github/workflows/benchmark_comment_markdown.md
+          if-no-files-found: error
       # This workflow will then trigger the one in post_benchmarking_comment.yml, via respository_dispatch
       # we need to tell that workflow which PR triggered it, so that it will post in the right thread
       - name: Repository dispatch - trigger PR comment event workflow
