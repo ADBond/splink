@@ -12,11 +12,17 @@ jobs:
     env:
       PR_NUMBER: ${{ github.event.client_payload.pr_number }}
     steps:
+      # can't use actions/download-artifact as that does not support
+      # downloading artifact from a separate workflow
       - name: Retrieve comment markdown file artifact
-        uses: actions/download-artifact@v3
+        uses: dawidd6/action-download-artifact@v2
         with:
           name: benchmark-markdown-comment-pr-${{ env.PR_NUMBER }}
           path: benchmark_comment_markdown.md
+          workflow: pytest_benchmark_for_comment.yaml
+          workflow_conclusion: success
+          pr: ${{ env.PR_NUMBER }}
+          if_no_artifact_found: fail
 
       - name: Post benchmarking comment
         uses: thollander/actions-comment-pull-request@v2
