@@ -19,7 +19,7 @@ jobs:
         with:
           name: benchmark-markdown-comment-pr-${{ env.PR_NUMBER }}
           path: benchmark_comment_markdown.md
-          workflow: pytest_benchmark_for_comment.yaml
+          workflow: pytest_benchmark_for_comment.yml
           workflow_conclusion: success
           pr: ${{ env.PR_NUMBER }}
           if_no_artifact_found: fail
