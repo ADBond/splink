@@ -76,7 +76,7 @@ jobs:
       - name: Save comment markdown file as artifact
         uses: actions/upload-artifact@v3
         with:
-          name: benchmark-markdown-comment-pr-${{ PR_NUMBER }}
+          name: benchmark-markdown-comment-pr-${{ env.PR_NUMBER }}
           path: benchmark_comment_markdown.md
       # This workflow will then trigger the one in post_benchmarking_comment.yml, via respository_dispatch
       # we need to tell that workflow which PR triggered it, so that it will post in the right thread
@@ -84,4 +84,4 @@ jobs:
         uses: peter-evans/repository-dispatch@v2
         with:
           event-type: trigger-pr-comment
-          client-payload: '{"pr_number": "${{ PR_NUMBER }}"}'
+          client-payload: '{"pr_number": "${{ env.PR_NUMBER }}"}'
