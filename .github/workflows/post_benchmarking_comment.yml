@@ -15,12 +15,12 @@ jobs:
       - name: Retrieve comment markdown file artifact
         uses: actions/download-artifact@v3
         with:
-          name: benchmark-markdown-comment-pr-${{ PR_NUMBER }}
+          name: benchmark-markdown-comment-pr-${{ env.PR_NUMBER }}
           path: benchmark_comment_markdown.md
 
       - name: Post benchmarking comment
         uses: thollander/actions-comment-pull-request@v2
         with:
           filePath: benchmark_comment_markdown.md
-          pr_number: ${{ PR_NUMBER }}
+          pr_number: ${{ env.PR_NUMBER }}
           comment_tag: PR-benchmark-comment
