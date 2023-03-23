@@ -1,0 +1,26 @@
+# this workflow runs off the back of comment-generation so that it can run in main repo context
+# this ensures we have the necessary write permission to post a comment on main repo,
+# which would be lacking if this workflow was triggered directly by a PR from a fork
+name: Post benchmark comment
+on:
+  repository_dispatch:
+    types: [trigger-pr-comment]
+
+jobs:
+  post-benchmark-comment:
+    runs-on: ubuntu-20.04
+    env:
+      PR_NUMBER: ${{ github.event.client_payload.pr_number }}
+    steps:
+      - name: Retrieve comment markdown file artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: benchmark-markdown-comment-pr-${{ env.PR_NUMBER }}
+          path: benchmark_comment_markdown.md
+
+      - name: Post benchmarking comment
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          filePath: benchmark_comment_markdown.md
+          pr_number: ${{ env.PR_NUMBER }}
+          comment_tag: PR-benchmark-comment
