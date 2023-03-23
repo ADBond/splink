@@ -9,18 +9,18 @@ on:
 jobs:
   post-benchmark-comment:
     runs-on: ubuntu-20.04
+    env:
+      PR_NUMBER: ${{ github.event.client_payload.pr_number }}
     steps:
       - name: Retrieve comment markdown file artifact
         uses: actions/download-artifact@v3
-        env:
-          PR_NUMBER: ${{ github.event.client_payload.pr_number }}
         with:
           name: benchmark-markdown-comment-pr-${{ PR_NUMBER }}
           path: benchmark_comment_markdown.md
 
       - name: Post benchmarking comment
-        uses: NejcZdovc/comment-pr@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: thollander/actions-comment-pull-request@v2
         with:
-          file: benchmark_comment_markdown.md
+          filePath: benchmark_comment_markdown.md
+          pr_number: ${{ PR_NUMBER }}
+          comment_tag: PR-benchmark-comment
