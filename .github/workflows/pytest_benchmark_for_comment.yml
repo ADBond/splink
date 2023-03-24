@@ -14,7 +14,11 @@ jobs:
       #       check-out repo and set-up python
       #----------------------------------------------
       - name: Check out repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+        # need to specify info so that fork checkouts don't end up as detached heads
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
       - name: Set up python
         id: setup-python
         uses: actions/setup-python@v2
