@@ -72,7 +72,6 @@ jobs:
           source .venv/bin/activate
           pytest benchmarking/test_performance.py  --benchmark-json benchmarking/output.json -k 'test_2_rounds_1k_sqlite or test_2_rounds_1k_duckdb'
           python benchmarking/combine_benchmarks_timeseries.py
-          # mv benchmark_comment_markdown.md .pr_info/benchmark_comment_markdown.md
 
       # NB: it is necessary to save this comment in an artifact and post in a separate workflow.
       # This is because for fork PRs this will run in the fork's context, which does not
