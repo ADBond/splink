@@ -186,7 +186,6 @@ def chart_to_markdown(alt_chart):
     compressed = x.compressToEncodedURIComponent(cj)
 
     return (
-        f"**Click [here]"
-        f"(https://vega.github.io/editor/#/url/vega-lite/{compressed})"
+        f"**Click [here](https://vega.github.io/editor/#/url/vega-lite/{compressed})"
         " for vega lite time series charts**"
     )
