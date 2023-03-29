@@ -1,8 +1,5 @@
 name: Benchmark timeseries commit
-on:
-  push:
-    branches:
-      - "test-bm"
+on: push
 
 jobs:
   simple-job:
