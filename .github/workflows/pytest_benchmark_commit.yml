@@ -2,13 +2,13 @@ name: Benchmark timeseries commit
 on:
   push:
     branches:
-      - master
+      - test-bm
 
 jobs:
   test:
     runs-on: ubuntu-20.04
     # only run this workflow on the upstream
-    if: github.repository == 'moj-analytical-services/splink'
+    if: github.repository == 'ADBond/splink'
     steps:
       #----------------------------------------------
       #       check-out repo and set-up python
