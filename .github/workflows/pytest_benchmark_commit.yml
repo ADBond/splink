@@ -2,9 +2,14 @@ name: Benchmark timeseries commit
 on:
   push:
     branches:
-      - test-bm
+      - "test-bm"
 
 jobs:
+  simple-job:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: check
+        run: echo $(github.repository)
   test:
     runs-on: ubuntu-20.04
     # only run this workflow on the upstream
