@@ -5,13 +5,9 @@
 # happy
 def dummy():
 
-    
-
-
-    x = [    
+    x = [
         2,
         5,
-
         21,
     ]
     pass
