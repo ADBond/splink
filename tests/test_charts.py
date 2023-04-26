@@ -1,7 +1,6 @@
 import pandas as pd
 
-import splink.duckdb.duckdb_comparison_library as cl
-from splink.duckdb.duckdb_linker import DuckDBLinker
+from tests.decorator import mark_tests_without
 
 # ground truth:
 # true matches ALWAYS match on gender
@@ -117,7 +116,11 @@ df = pd.DataFrame(
 )
 
 
-def test_m_u_charts():
+@mark_tests_without()
+def test_m_u_charts(test_helpers, dialect):
+    helper = test_helpers[dialect]
+    cl = helper.cl
+
     settings = {
         "link_type": "dedupe_only",
         "comparisons": [
@@ -126,7 +129,8 @@ def test_m_u_charts():
             cl.levenshtein_at_thresholds("surname", [1]),
         ],
     }
-    linker = DuckDBLinker(df, settings)
+    df_linker = helper.convert_frame(df)
+    linker = helper.linker(df_linker, settings, **helper.extra_linker_args())
 
     linker.estimate_probability_two_random_records_match(
         "l.true_match_id = r.true_match_id", recall=1.0
@@ -144,7 +148,11 @@ def test_m_u_charts():
     linker.match_weights_chart()
 
 
-def test_parameter_estimate_charts():
+@mark_tests_without()
+def test_parameter_estimate_charts(test_helpers, dialect, request):
+    helper = test_helpers[dialect]
+    cl = helper.cl
+
     settings = {
         "link_type": "dedupe_only",
         "comparisons": [
@@ -153,7 +161,8 @@ def test_parameter_estimate_charts():
             cl.levenshtein_at_thresholds("surname", [1]),
         ],
     }
-    linker = DuckDBLinker(df, settings)
+    df_linker = helper.convert_frame(df)
+    linker = helper.linker(df_linker, settings, **helper.extra_linker_args())
 
     linker.estimate_probability_two_random_records_match(
         "l.true_match_id = r.true_match_id", recall=1.0
@@ -189,7 +198,7 @@ def test_parameter_estimate_charts():
             cl.levenshtein_at_thresholds("first_name", [1]),
         ],
     }
-    linker = DuckDBLinker(df, settings)
+    linker = helper.linker(df_linker, settings, **helper.extra_linker_args())
     linker.estimate_u_using_random_sampling(1e6)
 
     linker.parameter_estimate_comparisons_chart()
