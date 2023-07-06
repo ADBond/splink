@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - dummy-docs-branch
 
   workflow_dispatch:
 
