@@ -84,9 +84,13 @@ jobs:
           if-no-files-found: error
       # This workflow will then trigger the one in post_benchmarking_comment.yml, via respository_dispatch
       # we need to tell that workflow which PR triggered it, so that it will post in the right thread
+      # https://docs.github.com/en/rest/repos/repos?apiVersion=2022-11-28#create-a-repository-dispatch-event
       - name: Repository dispatch - trigger PR comment event workflow
-        uses: peter-evans/repository-dispatch@v2
-        with:
-          event-type: trigger-pr-comment
-          client-payload: '{"pr_number": "${{ env.PR_NUMBER }}"}'
-          token: ${{ secrets.SPLINK_TOKEN }}
+        run: |
+          curl -L \
+          -X POST \
+          -H "Accept: application/vnd.github+json" \
+          -H "Authorization: Bearer ${{ secrets.SPLINK_TOKEN }}"\
+          -H "X-GitHub-Api-Version: 2022-11-28" \
+          https://api.github.com/repos/moj-analytical-services/action-tester/dispatches \
+          -d '{"event_type":"on-demand-test","client_payload":{"pr_number": "${{ env.PR_NUMBER }}"}'
