@@ -89,3 +89,4 @@ jobs:
         with:
           event-type: trigger-pr-comment
           client-payload: '{"pr_number": "${{ env.PR_NUMBER }}"}'
+          token: ${{ secrets.SPLINK_TOKEN }}
