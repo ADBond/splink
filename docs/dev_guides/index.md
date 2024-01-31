@@ -33,3 +33,5 @@ Splink is quite a large, complex codebase. The guides in this section lay out so
 * [Settings Validation](./settings_validation/settings_validation_overview.md) - summarises how to use and expand the existing settings schema and validation functions.
 
 XXX
+
+[somebrokenlink](./blog/posts/2023-12-06-feature_update.md)
