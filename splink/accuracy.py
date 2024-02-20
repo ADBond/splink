@@ -22,7 +22,7 @@ def truth_space_table_from_labels_with_predictions_sqls(
             (round(match_weight/{match_weight_round_to_nearest}))
         """
     else:
-        truth_thres_expr = "match_weight"
+        truth_thres_expr = "match_weight" + "splink_3_adjustment"
 
     # c_P and c_N are clerical positive and negative, respectively
     sqls = []
