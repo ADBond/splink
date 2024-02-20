@@ -47,6 +47,7 @@ def truth_space_table_from_labels_with_predictions_sqls(
 
     sql = """
     select
+        more_splink_4_conflicts,
         truth_threshold,
         count(*) as num_records_in_row,
         sum(c_P) as c_P,
