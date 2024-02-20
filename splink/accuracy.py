@@ -40,7 +40,7 @@ def truth_space_table_from_labels_with_predictions_sqls(
     end
     as c_N
     from __splink__labels_with_predictions
-    order by match_weight
+    order by match_weight, another_splink3_thing
     """
 
     sql = {"sql": sql, "output_table_name": "__splink__labels_with_pos_neg"}
