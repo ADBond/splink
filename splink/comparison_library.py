@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Iterator
 from copy import copy
 from typing import Any, Iterable, List, Optional, Union
 
@@ -8,6 +9,37 @@ from .comparison_creator import ComparisonCreator
 from .comparison_level_creator import ComparisonLevelCreator
 from .comparison_level_library import CustomLevel, DateMetricType
 from .misc import ensure_is_iterable
+
+
+def context_labels(
+    thresholds: list[float],
+    metric_name: str,
+    col_name: str = "",
+    less_than_more_than: str = "less_than",
+    discrete: bool = True,
+) -> Iterator[str]:
+    thresholds = [0] + thresholds
+    col_name_insertion = f"({col_name})" if col_name else ""
+    operator = "<" if less_than_more_than == "less_than" else ">"
+    reversed_operator = ">" if less_than_more_than == "less_than" else "<"
+    for i, threshold in enumerate(thresholds):
+        if i == 0:
+            continue
+        prev_threshold = thresholds[i - 1]
+        if discrete and prev_threshold + 1 == threshold:
+            yield f"{metric_name}{col_name_insertion} == {threshold}"
+        else:
+            if threshold == 0:
+                yield f"{metric_name}{col_name_insertion} {operator}= {threshold}"
+            label = f"{metric_name}{col_name_insertion} " f"{operator}= {threshold}"
+            if prev_threshold != 0:
+                if discrete:
+                    label = f"{prev_threshold + 1} {operator}= {label}"
+                else:
+                    label = f"{prev_threshold} {operator} {label}"
+            yield label
+
+    yield f"{metric_name}{col_name_insertion} {reversed_operator} {thresholds[-1]}"
 
 
 class CustomComparison(ComparisonCreator):
@@ -157,14 +189,19 @@ class LevenshteinAtThresholds(ComparisonCreator):
         super().__init__(col_name)
 
     def create_comparison_levels(self) -> List[ComparisonLevelCreator]:
+        post_exact_labels = context_labels(
+            self.thresholds, "Levenshtein", self.col_expression.output_column_name
+        )
         return [
             cll.NullLevel(self.col_expression),
             cll.ExactMatchLevel(self.col_expression),
             *[
-                cll.LevenshteinLevel(self.col_expression, threshold)
+                cll.LevenshteinLevel(self.col_expression, threshold).configure(
+                    label_for_charts=next(post_exact_labels)
+                )
                 for threshold in self.thresholds
             ],
-            cll.ElseLevel(),
+            cll.ElseLevel().configure(label_for_charts=next(post_exact_labels)),
         ]
 
     def create_description(self) -> str:
@@ -373,14 +410,23 @@ class JaroWinklerAtThresholds(ComparisonCreator):
         super().__init__(col_name)
 
     def create_comparison_levels(self) -> List[ComparisonLevelCreator]:
+        post_exact_labels = context_labels(
+            self.thresholds,
+            "Jaro-Winkler",
+            self.col_expression.output_column_name,
+            less_than_more_than="more_than",
+            discrete=False,
+        )
         return [
             cll.NullLevel(self.col_expression),
             cll.ExactMatchLevel(self.col_expression),
             *[
-                cll.JaroWinklerLevel(self.col_expression, threshold)
+                cll.JaroWinklerLevel(self.col_expression, threshold).configure(
+                    label_for_charts=next(post_exact_labels)
+                )
                 for threshold in self.thresholds
             ],
-            cll.ElseLevel(),
+            cll.ElseLevel().configure(label_for_charts=next(post_exact_labels)),
         ]
 
     def create_description(self) -> str:
