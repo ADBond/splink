@@ -31,7 +31,8 @@ jobs:
         run: |
           poetry config installer.max-workers 1
           poetry config virtualenvs.in-project true
-          poetry install -vvv --no-interaction --no-root || pip wheel --no-cache-dir --use-pep517 "numpy (==1.24.4)"
+          poetry install -vvv --no-interaction --no-root
+          # || pip wheel --no-cache-dir --use-pep517 "numpy (==1.24.4)"
 
       - name: Run tests
         run: poetry run pytest -v --durations=0 -m "sqlite_only" tests/
