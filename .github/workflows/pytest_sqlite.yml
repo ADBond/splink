@@ -29,6 +29,7 @@ jobs:
 
       - name: Install dependencies and altair directly
         run: |
+          poetry config installer.max-workers 1
           poetry config virtualenvs.in-project true
           poetry install --no-interaction --no-root
 
