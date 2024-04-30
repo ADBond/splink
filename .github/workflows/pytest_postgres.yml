@@ -1,4 +1,4 @@
-name: Postgres tests
+name: Run tests
 on:
   pull_request:
     branches:
@@ -12,7 +12,12 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        test-set: ["duckdb", "spark_only", "sqlite_only", "postgres_only"]
     services:
+      if: ${{ matrix.test-set }} == "postgres_only"
       pg_splink_ci:
         image: postgres
         env:
@@ -26,10 +31,7 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
-    strategy:
-      matrix:
-        python-version: ["3.8", "3.9"]
-    name: Run tests with Python ${{ matrix.python-version }}
+    name: Run '${{ matrix.test-set }}' tests with Python ${{ matrix.python-version }}
     steps:
       - uses: actions/checkout@v4
 
@@ -47,4 +49,4 @@ jobs:
           poetry install --no-interaction --no-root
 
       - name: Run tests
-        run: poetry run pytest -v --durations=0 -m "postgres_only" tests/
+        run: poetry run pytest -v --durations=0 -m "${{ matrix.test-set }}" tests/
