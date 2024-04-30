@@ -8,6 +8,9 @@ homepage = "https://github.com/moj-analytical-services/splink"
 repository = "https://github.com/moj-analytical-services/splink"
 readme = "README.md"
 
+# [tool.poetry.dependencies.lockfile]
+# python = "^3.9"
+
 [tool.poetry.dependencies]
 python = ">=3.8.0,<4.0.0"
 jsonschema = ">=3.2"
@@ -62,6 +65,8 @@ pyspark = ["pyspark"]
 spark = ["pyspark"]
 athena = ["awswrangler"]
 postgres = ["sqlalchemy", "psycopg2-binary"]
+# for generating alternate lockfiles
+# py310 = ["py>=3.10"]
 
 [build-system]
 requires = ["poetry-core>=1.0.8"]
