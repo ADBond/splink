@@ -157,7 +157,7 @@ def major_minor_version_greater_equal_than(this_version, base_comparison_version
     return this_version >= base_version
 
 
-def ascii_uid(len):
+def ascii_uid(len: int) -> str:
     # use only lowercase as case-sensitivity is an issue in e.g. postgres
     return "".join(random.choices(string.ascii_lowercase + string.digits, k=len))
 

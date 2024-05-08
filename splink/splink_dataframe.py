@@ -5,6 +5,8 @@ from abc import ABC, abstractmethod, abstractproperty
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+import pandas as pd
+
 from .input_column import InputColumn
 
 logger = logging.getLogger(__name__)
@@ -115,7 +117,7 @@ class SplinkDataFrame(ABC):
         """
         raise NotImplementedError("as_record_dict not implemented for this linker")
 
-    def as_pandas_dataframe(self, limit=None):
+    def as_pandas_dataframe(self, limit: int | None = None) -> pd.DataFrame:
         """Return the dataframe as a pandas dataframe.
 
         This can be computationally expensive if the dataframe is large.
@@ -132,7 +134,6 @@ class SplinkDataFrame(ABC):
         Returns:
             pandas.DataFrame: pandas Dataframe
         """
-        import pandas as pd
 
         return pd.DataFrame(self.as_record_dict(limit=limit))
 
