@@ -2,8 +2,8 @@ from copy import deepcopy
 
 import pandas as pd
 
+from splink.internals.backends.duckdb.database_api import DuckDBAPI
 from splink.internals.comparison_library import ExactMatch
-from splink.internals.duckdb.database_api import DuckDBAPI
 from splink.internals.linker import Linker
 
 settings_template = {

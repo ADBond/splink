@@ -5,7 +5,7 @@ import os
 import pandas as pd
 
 import splink.internals.comparison_level_library as cll
-from splink.internals.duckdb.database_api import DuckDBAPI
+from splink.internals.backends.duckdb.database_api import DuckDBAPI
 from splink.internals.linker import Linker
 
 

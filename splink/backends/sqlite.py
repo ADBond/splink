@@ -1,3 +1,3 @@
-from splink.internals.sqlite.database_api import SQLiteAPI
+from splink.internals.backends.sqlite.database_api import SQLiteAPI
 
 __all__ = ["SQLiteAPI"]

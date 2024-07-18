@@ -39,7 +39,7 @@ from pandas.testing import assert_series_equal
 
 import splink.comparison_library as cl
 from splink import DuckDBAPI, Linker, SettingsCreator
-from splink.internals.duckdb.dataframe import DuckDBDataFrame
+from splink.internals.backends.duckdb.dataframe import DuckDBDataFrame
 from splink.internals.em_training_session import EMTrainingSession
 from splink.internals.exceptions import SplinkException
 from splink.internals.pipeline import CTEPipeline

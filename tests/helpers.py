@@ -6,11 +6,11 @@ import pandas as pd
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.types import INTEGER, TEXT
 
-from splink.internals.duckdb.database_api import DuckDBAPI
-from splink.internals.linker import Linker
-from splink.internals.postgres.database_api import PostgresAPI
-from splink.internals.spark.database_api import SparkAPI
-from splink.internals.sqlite.database_api import SQLiteAPI
+from splink import Linker
+from splink.backends.duckdb import DuckDBAPI
+from splink.backends.postgres import PostgresAPI
+from splink.backends.spark import SparkAPI
+from splink.backends.sqlite import SQLiteAPI
 
 
 class TestHelper(ABC):

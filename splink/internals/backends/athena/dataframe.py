@@ -8,8 +8,8 @@ import awswrangler as wr
 import numpy as np
 from pandas import DataFrame as pd_DataFrame
 
-from ..input_column import InputColumn
-from ..splink_dataframe import SplinkDataFrame
+from splink.internals.input_column import InputColumn
+from splink.internals.splink_dataframe import SplinkDataFrame
 
 logger = logging.getLogger(__name__)
 if TYPE_CHECKING:

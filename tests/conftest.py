@@ -2,8 +2,7 @@ import logging
 
 import pytest
 
-from splink.internals.spark.database_api import SparkAPI
-from splink.internals.spark.jar_location import similarity_jar_location
+from splink.backends.spark import SparkAPI, similarity_jar_location
 
 # ruff: noqa: F401
 # imported fixtures:

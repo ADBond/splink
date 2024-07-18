@@ -3,9 +3,9 @@ from __future__ import annotations
 import logging
 from typing import Sequence, Union
 
-import duckdb
 import pandas as pd
 
+import duckdb
 from splink.internals.database_api import AcceptableInputTableType, DatabaseAPI
 from splink.internals.dialects import (
     DuckDBDialect,
