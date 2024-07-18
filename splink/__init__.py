@@ -14,19 +14,19 @@ from splink.internals.settings_creator import SettingsCreator
 # and ensures that typing information is retained so e.g. the arguments autocomplete
 # without importing them at runtime
 if TYPE_CHECKING:
-    from splink.internals.duckdb.database_api import DuckDBAPI
-    from splink.internals.spark.database_api import SparkAPI
+    from splink.internals.backends.duckdb.database_api import DuckDBAPI
+    from splink.internals.backends.spark.database_api import SparkAPI
 
 
 # Use getarr to make the error appear at the point of use
 def __getattr__(name):
     try:
         if name == "SparkAPI":
-            from splink.internals.spark.database_api import SparkAPI
+            from splink.internals.backends.spark.database_api import SparkAPI
 
             return SparkAPI
         elif name == "DuckDBAPI":
-            from splink.internals.duckdb.database_api import DuckDBAPI
+            from splink.internals.backends.duckdb.database_api import DuckDBAPI
 
             return DuckDBAPI
     except ImportError as err:

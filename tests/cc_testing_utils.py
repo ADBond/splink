@@ -4,9 +4,9 @@ import networkx as nx
 import pandas as pd
 from networkx.algorithms import connected_components as cc_nx
 
+from splink.internals.backends.duckdb.database_api import DuckDBAPI
+from splink.internals.backends.duckdb.dataframe import DuckDBDataFrame
 from splink.internals.connected_components import solve_connected_components
-from splink.internals.duckdb.database_api import DuckDBAPI
-from splink.internals.duckdb.dataframe import DuckDBDataFrame
 from splink.internals.linker import Linker
 from splink.internals.pipeline import CTEPipeline
 from splink.internals.vertically_concatenate import compute_df_concat_with_tf

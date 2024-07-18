@@ -7,9 +7,9 @@ from splink.internals.accuracy import (
     predictions_from_sample_of_pairwise_labels_sql,
     truth_space_table_from_labels_with_predictions_sqls,
 )
+from splink.internals.backends.duckdb.database_api import DuckDBAPI
 from splink.internals.blocking_rule_library import block_on
 from splink.internals.comparison_library import ExactMatch
-from splink.internals.duckdb.database_api import DuckDBAPI
 from splink.internals.linker import Linker
 from splink.internals.pipeline import CTEPipeline
 from splink.internals.vertically_concatenate import compute_df_concat_with_tf
