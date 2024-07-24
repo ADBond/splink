@@ -2,17 +2,17 @@ from __future__ import annotations
 
 from typing import Any, List, Sequence
 
-from ..charts import (
+from splink.internals.charts import (
     ChartReturnType,
 )
-from ..charts import (
+from splink.internals.charts import (
     completeness_chart as records_to_completeness_chart,
 )
-from ..database_api import AcceptableInputTableType, DatabaseAPISubClass
-from ..input_column import InputColumn
-from ..pipeline import CTEPipeline
-from ..splink_dataframe import SplinkDataFrame
-from ..vertically_concatenate import vertically_concatenate_sql
+from splink.internals.database_api import AcceptableInputTableType, DatabaseAPISubClass
+from splink.internals.input_column import InputColumn
+from splink.internals.pipeline import CTEPipeline
+from splink.internals.splink_dataframe import SplinkDataFrame
+from splink.internals.vertically_concatenate import vertically_concatenate_sql
 
 
 def completeness_data(
@@ -24,7 +24,7 @@ def completeness_data(
     pipeline = CTEPipeline()
 
     sql = vertically_concatenate_sql(
-        splink_df_dict, salting_required=False, source_dataset_column_name=None
+        splink_df_dict, salting_required=False, source_dataset_input_column=None
     )
 
     pipeline.enqueue_sql(sql, "__splink__df_concat")
@@ -116,9 +116,6 @@ def completeness_chart(
             none, all columns will be computed. Default to None.
         table_names_for_chart: A list of names.  Must be the same length as
             table_or_tables.
-
-
-        ```
     """
 
     splink_df_dict = db_api.register_multiple_tables(table_or_tables)

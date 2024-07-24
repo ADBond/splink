@@ -1,9 +1,13 @@
 import os
 
-import splink.comparison_level_library as cll
-import splink.comparison_library as cl
+import splink.internals.comparison_level_library as cll
+import splink.internals.comparison_library as cl
+from splink import block_on
+from splink.blocking_analysis import (
+    cumulative_comparisons_to_be_scored_from_blocking_rules_chart,
+)
 from splink.exploratory import profile_columns
-from splink.linker import Linker
+from splink.internals.linker import Linker
 
 from .decorator import mark_with_dialects_excluding
 
@@ -65,7 +69,7 @@ def test_run_predict(dialect, test_helpers):
         cl_settings,
         db_api,
     )
-    linker.predict()
+    linker.inference.predict()
 
 
 @mark_with_dialects_excluding()
@@ -79,25 +83,27 @@ def test_full_run(dialect, test_helpers, tmp_path):
         cl_settings,
         db_api,
     )
-    linker.estimate_probability_two_random_records_match(
+    linker.training.estimate_probability_two_random_records_match(
         ["l.first_name = r.first_name AND l.surname = r.surname"],
         0.6,
     )
-    linker.estimate_u_using_random_sampling(500)
-    linker.estimate_parameters_using_expectation_maximisation(
+    linker.training.estimate_u_using_random_sampling(500)
+    linker.training.estimate_parameters_using_expectation_maximisation(
         "l.first_name = r.first_name"
     )
-    linker.estimate_parameters_using_expectation_maximisation("l.surname = r.surname")
-    df_e = linker.predict()
-    df_c = linker.cluster_pairwise_predictions_at_threshold(df_e, 0.99)
+    linker.training.estimate_parameters_using_expectation_maximisation(
+        "l.surname = r.surname"
+    )
+    df_e = linker.inference.predict()
+    df_c = linker.clustering.cluster_pairwise_predictions_at_threshold(df_e, 0.99)
 
-    linker.comparison_viewer_dashboard(
+    linker.visualisations.comparison_viewer_dashboard(
         df_e,
         os.path.join(tmp_path, "test_cvd_duckdb.html"),
         overwrite=True,
         num_example_rows=2,
     )
-    linker.cluster_studio_dashboard(
+    linker.visualisations.cluster_studio_dashboard(
         df_e,
         df_c,
         os.path.join(tmp_path, "test_csd_duckdb.html"),
@@ -111,25 +117,31 @@ def test_charts(dialect, test_helpers, tmp_path):
     df = helper.load_frame_from_csv("./tests/datasets/fake_1000_from_splink_demos.csv")
 
     db_api = helper.DatabaseAPI(**helper.db_api_args())
-    linker = Linker(
-        df,
-        cl_settings,
-        db_api,
-    )
-    linker.cumulative_num_comparisons_from_blocking_rules_chart()
 
-    linker.estimate_probability_two_random_records_match(
+    cumulative_comparisons_to_be_scored_from_blocking_rules_chart(
+        table_or_tables=df,
+        blocking_rules=[block_on("dob"), block_on("first_name")],
+        link_type="dedupe_only",
+        db_api=db_api,
+        unique_id_column_name="unique_id",
+    )
+
+    linker = Linker(df, cl_settings, db_api)
+
+    linker.training.estimate_probability_two_random_records_match(
         ["l.first_name = r.first_name AND l.surname = r.surname"],
         0.6,
     )
-    linker.estimate_u_using_random_sampling(500)
-    linker.estimate_parameters_using_expectation_maximisation(
+    linker.training.estimate_u_using_random_sampling(500)
+    linker.training.estimate_parameters_using_expectation_maximisation(
         "l.first_name = r.first_name"
     )
-    linker.estimate_parameters_using_expectation_maximisation("l.surname = r.surname")
+    linker.training.estimate_parameters_using_expectation_maximisation(
+        "l.surname = r.surname"
+    )
 
-    linker.match_weights_chart()
-    linker.m_u_parameters_chart()
+    linker.visualisations.match_weights_chart()
+    linker.visualisations.m_u_parameters_chart()
 
 
 @mark_with_dialects_excluding()

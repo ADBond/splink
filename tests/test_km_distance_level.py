@@ -1,9 +1,9 @@
 import pandas as pd
 
-import splink.comparison_level_library as cll
-import splink.comparison_library as cl
-from splink.duckdb.database_api import DuckDBAPI
-from splink.linker import Linker
+import splink.internals.comparison_level_library as cll
+import splink.internals.comparison_library as cl
+from splink.internals.duckdb.database_api import DuckDBAPI
+from splink.internals.linker import Linker
 
 from .decorator import mark_with_dialects_excluding
 
@@ -125,9 +125,9 @@ def test_km_distance_levels(dialect, test_helpers):
     df = helper.convert_frame(df)
 
     linker = helper.Linker(df, settings_cl, **helper.extra_linker_args())
-    cl_df_e = linker.predict().as_pandas_dataframe()
+    cl_df_e = linker.inference.predict().as_pandas_dataframe()
     linker = helper.Linker(df, settings_cll, **helper.extra_linker_args())
-    cll_df_e = linker.predict().as_pandas_dataframe()
+    cll_df_e = linker.inference.predict().as_pandas_dataframe()
 
     linker_outputs = {
         "cl": cl_df_e,
@@ -226,8 +226,8 @@ def test_haversine_level():
 
     db_api = DuckDBAPI()
 
-    linker = Linker(df, settings, input_table_aliases="test", database_api=db_api)
-    df_e = linker.predict().as_pandas_dataframe()
+    linker = Linker(df, settings, input_table_aliases="test", db_api=db_api)
+    df_e = linker.inference.predict().as_pandas_dataframe()
 
     row = dict(df_e.query("id_l == 1 and id_r == 2").iloc[0])
     assert row["gamma_lat_long"] == 3

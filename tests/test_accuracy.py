@@ -3,16 +3,16 @@ import pandas as pd
 import pytest
 
 from splink import SettingsCreator
-from splink.accuracy import (
+from splink.internals.accuracy import (
     predictions_from_sample_of_pairwise_labels_sql,
     truth_space_table_from_labels_with_predictions_sqls,
 )
-from splink.blocking_rule_library import block_on
-from splink.comparison_library import ExactMatch
-from splink.duckdb.database_api import DuckDBAPI
-from splink.linker import Linker
-from splink.pipeline import CTEPipeline
-from splink.vertically_concatenate import compute_df_concat_with_tf
+from splink.internals.blocking_rule_library import block_on
+from splink.internals.comparison_library import ExactMatch
+from splink.internals.duckdb.database_api import DuckDBAPI
+from splink.internals.linker import Linker
+from splink.internals.pipeline import CTEPipeline
+from splink.internals.vertically_concatenate import compute_df_concat_with_tf
 
 from .basic_settings import get_settings_dict
 
@@ -50,18 +50,18 @@ def test_scored_labels_table():
 
     db_api = DuckDBAPI()
 
-    linker = Linker(df, settings, database_api=db_api)
+    linker = Linker(df, settings, db_api=db_api)
 
     pipeline = CTEPipeline()
     concat_with_tf = compute_df_concat_with_tf(linker, pipeline)
 
     pipeline = CTEPipeline([concat_with_tf])
-    linker.register_table(df_labels, "labels")
+    linker.table_management.register_table(df_labels, "labels")
 
     sqls = predictions_from_sample_of_pairwise_labels_sql(linker, "labels")
     pipeline.enqueue_list_of_sqls(sqls)
 
-    df_scores_labels = linker.db_api.sql_pipeline_to_splink_dataframe(pipeline)
+    df_scores_labels = linker._db_api.sql_pipeline_to_splink_dataframe(pipeline)
 
     df_scores_labels = df_scores_labels.as_pandas_dataframe()
     df_scores_labels.sort_values(["unique_id_l", "unique_id_r"], inplace=True)
@@ -69,7 +69,7 @@ def test_scored_labels_table():
     assert len(df_scores_labels) == 6
 
     # Check predictions are the same as the labels
-    df_predict = linker.predict().as_pandas_dataframe()
+    df_predict = linker.inference.predict().as_pandas_dataframe()
 
     f1 = df_predict["unique_id_l"] == 1
     f2 = df_predict["unique_id_r"] == 2
@@ -112,7 +112,7 @@ def test_truth_space_table():
 
     db_api = DuckDBAPI()
 
-    linker = Linker(df, settings, database_api=db_api)
+    linker = Linker(df, settings, db_api=db_api)
 
     labels_with_predictions = [
         {
@@ -139,12 +139,14 @@ def test_truth_space_table():
     ]
     labels_with_predictions = pd.DataFrame(labels_with_predictions)
 
-    linker.register_table(labels_with_predictions, "__splink__labels_with_predictions")
+    linker.table_management.register_table(
+        labels_with_predictions, "__splink__labels_with_predictions"
+    )
     pipeline = CTEPipeline()
     sqls = truth_space_table_from_labels_with_predictions_sqls(0.5)
     pipeline.enqueue_list_of_sqls(sqls)
 
-    df_roc = linker.db_api.sql_pipeline_to_splink_dataframe(pipeline)
+    df_roc = linker._db_api.sql_pipeline_to_splink_dataframe(pipeline)
 
     df_roc = df_roc.as_pandas_dataframe()
 
@@ -193,11 +195,11 @@ def test_roc_chart_dedupe_only():
     settings_dict = get_settings_dict()
     db_api = DuckDBAPI(connection=":memory:")
 
-    linker = Linker(df, settings_dict, database_api=db_api)
+    linker = Linker(df, settings_dict, db_api=db_api)
 
-    linker.register_table(df_labels, "labels")
+    labels_sdf = linker.table_management.register_table(df_labels, "labels")
 
-    linker.roc_chart_from_labels_table("labels")
+    linker.evaluation.accuracy_analysis_from_labels_table(labels_sdf, output_type="roc")
 
 
 def test_roc_chart_link_and_dedupe():
@@ -224,13 +226,11 @@ def test_roc_chart_link_and_dedupe():
     settings_dict["link_type"] = "link_and_dedupe"
     db_api = DuckDBAPI(connection=":memory:")
 
-    linker = Linker(
-        df, settings_dict, input_table_aliases="fake_data_1", database_api=db_api
-    )
+    linker = Linker(df, settings_dict, input_table_aliases="fake_data_1", db_api=db_api)
 
-    linker.register_table(df_labels, "labels")
+    labels_sdf = linker.table_management.register_table(df_labels, "labels")
 
-    linker.roc_chart_from_labels_table("labels")
+    linker.evaluation.accuracy_analysis_from_labels_table(labels_sdf, output_type="roc")
 
 
 def test_prediction_errors_from_labels_table():
@@ -288,14 +288,16 @@ def test_prediction_errors_from_labels_table():
 
     db_api = DuckDBAPI()
 
-    linker = Linker(df, settings, database_api=db_api)
+    linker = Linker(df, settings, db_api=db_api)
 
-    linker.register_table(df_labels, "labels")
+    linker.table_management.register_table(df_labels, "labels")
 
     pipeline = CTEPipeline()
     compute_df_concat_with_tf(linker, pipeline)
 
-    df_res = linker.prediction_errors_from_labels_table("labels").as_pandas_dataframe()
+    df_res = linker.evaluation.prediction_errors_from_labels_table(
+        "labels"
+    ).as_pandas_dataframe()
     df_res = df_res[["unique_id_l", "unique_id_r"]]
     records = list(df_res.to_records(index=False))
     records = [tuple(p) for p in records]
@@ -307,14 +309,14 @@ def test_prediction_errors_from_labels_table():
 
     db_api = DuckDBAPI()
 
-    linker = Linker(df, settings, database_api=db_api)
+    linker = Linker(df, settings, db_api=db_api)
 
-    linker.register_table(df_labels, "labels")
+    linker.table_management.register_table(df_labels, "labels")
 
     pipeline = CTEPipeline()
     compute_df_concat_with_tf(linker, pipeline)
 
-    df_res = linker.prediction_errors_from_labels_table(
+    df_res = linker.evaluation.prediction_errors_from_labels_table(
         "labels", include_false_negatives=False
     ).as_pandas_dataframe()
     df_res = df_res[["unique_id_l", "unique_id_r"]]
@@ -328,13 +330,13 @@ def test_prediction_errors_from_labels_table():
 
     db_api = DuckDBAPI()
 
-    linker = Linker(df, settings, database_api=db_api)
-    linker.register_table(df_labels, "labels")
+    linker = Linker(df, settings, db_api=db_api)
+    linker.table_management.register_table(df_labels, "labels")
 
     pipeline = CTEPipeline()
     compute_df_concat_with_tf(linker, pipeline)
 
-    df_res = linker.prediction_errors_from_labels_table(
+    df_res = linker.evaluation.prediction_errors_from_labels_table(
         "labels", include_false_positives=False
     ).as_pandas_dataframe()
     df_res = df_res[["unique_id_l", "unique_id_r"]]
@@ -391,9 +393,9 @@ def test_prediction_errors_from_labels_column():
     #
     db_api = DuckDBAPI()
 
-    linker = Linker(df, settings, database_api=db_api)
+    linker = Linker(df, settings, db_api=db_api)
 
-    df_res = linker.prediction_errors_from_labels_column(
+    df_res = linker.evaluation.prediction_errors_from_labels_column(
         "cluster"
     ).as_pandas_dataframe()
     df_res = df_res[["unique_id_l", "unique_id_r"]]
@@ -408,9 +410,9 @@ def test_prediction_errors_from_labels_column():
 
     db_api = DuckDBAPI()
 
-    linker = Linker(df, settings, database_api=db_api)
+    linker = Linker(df, settings, db_api=db_api)
 
-    df_res = linker.prediction_errors_from_labels_column(
+    df_res = linker.evaluation.prediction_errors_from_labels_column(
         "cluster", include_false_positives=False
     ).as_pandas_dataframe()
     df_res = df_res[["unique_id_l", "unique_id_r"]]
@@ -425,9 +427,9 @@ def test_prediction_errors_from_labels_column():
 
     db_api = DuckDBAPI()
 
-    linker = Linker(df, settings, database_api=db_api)
+    linker = Linker(df, settings, db_api=db_api)
 
-    df_res = linker.prediction_errors_from_labels_column(
+    df_res = linker.evaluation.prediction_errors_from_labels_column(
         "cluster", include_false_negatives=False
     ).as_pandas_dataframe()
     df_res = df_res[["unique_id_l", "unique_id_r"]]
@@ -487,9 +489,11 @@ def test_truth_space_table_from_labels_column_dedupe_only():
 
     db_api = DuckDBAPI()
 
-    linker = Linker(df, settings, database_api=db_api)
+    linker = Linker(df, settings, db_api=db_api)
 
-    tt = linker.truth_space_table_from_labels_column("cluster").as_record_dict()
+    tt = linker.evaluation.accuracy_analysis_from_labels_column(
+        "cluster", output_type="table"
+    ).as_record_dict()
     # Truth threshold -3.17, meaning all comparisons get classified as positive
     truth_dict = tt[0]
     assert truth_dict["tp"] == 4
@@ -556,9 +560,11 @@ def test_truth_space_table_from_labels_column_link_only():
 
     db_api = DuckDBAPI()
 
-    linker = Linker([df_left, df_right], settings, database_api=db_api)
+    linker = Linker([df_left, df_right], settings, db_api=db_api)
 
-    tt = linker.truth_space_table_from_labels_column("ground_truth").as_record_dict()
+    tt = linker.evaluation.accuracy_analysis_from_labels_column(
+        "ground_truth", output_type="table"
+    ).as_record_dict()
     # Truth threshold -3.17, meaning all comparisons get classified as positive
     truth_dict = tt[0]
     assert truth_dict["tp"] == 3
@@ -604,8 +610,8 @@ def test_truth_space_table_from_column_vs_pandas_implementaiton_inc_unblocked():
         additional_columns_to_retain=["cluster"],
     )
 
-    linker_for_predictions = Linker(df, settings, database_api=DuckDBAPI())
-    df_predictions_raw = linker_for_predictions.predict()
+    linker_for_predictions = Linker(df, settings, db_api=DuckDBAPI())
+    df_predictions_raw = linker_for_predictions.inference.predict()
 
     # Score all of the positive labels even if not captured by the blocking rules
     # but not score any negative pairwise comaprisons not captured by the blocking rules
@@ -626,7 +632,7 @@ def test_truth_space_table_from_column_vs_pandas_implementaiton_inc_unblocked():
         match_key
     from {df_predictions_raw.physical_name}
     """
-    df_predictions = linker_for_predictions.query_sql(sql)
+    df_predictions = linker_for_predictions.misc.query_sql(sql)
 
     settings = SettingsCreator(
         link_type="dedupe_only",
@@ -639,10 +645,14 @@ def test_truth_space_table_from_column_vs_pandas_implementaiton_inc_unblocked():
         additional_columns_to_retain=["cluster"],
     )
 
-    linker_for_splink_answer = Linker(df, settings, database_api=DuckDBAPI())
-    df_from_splink = linker_for_splink_answer.truth_space_table_from_labels_column(
-        "cluster", positives_not_captured_by_blocking_rules_scored_as_zero=False
-    ).as_pandas_dataframe()
+    linker_for_splink_answer = Linker(df, settings, db_api=DuckDBAPI())
+    df_from_splink = (
+        linker_for_splink_answer.evaluation.accuracy_analysis_from_labels_column(
+            "cluster",
+            output_type="table",
+            positives_not_captured_by_blocking_rules_scored_as_zero=False,
+        ).as_pandas_dataframe()
+    )
 
     for _, splink_row in df_from_splink.iterrows():
         threshold = splink_row["truth_threshold"]
@@ -676,8 +686,8 @@ def test_truth_space_table_from_column_vs_pandas_implementaiton_ex_unblocked():
         additional_columns_to_retain=["cluster"],
     )
 
-    linker_for_predictions = Linker([df_1, df_2], settings, database_api=DuckDBAPI())
-    df_predictions_raw = linker_for_predictions.predict()
+    linker_for_predictions = Linker([df_1, df_2], settings, db_api=DuckDBAPI())
+    df_predictions_raw = linker_for_predictions.inference.predict()
 
     # When match_key = 1, the record is not really recovered by the blocking rules
     # so its score must be zero.  Want
@@ -692,7 +702,7 @@ def test_truth_space_table_from_column_vs_pandas_implementaiton_ex_unblocked():
         match_key
     from {df_predictions_raw.physical_name}
     """
-    df_predictions = linker_for_predictions.query_sql(sql)
+    df_predictions = linker_for_predictions.misc.query_sql(sql)
 
     settings = SettingsCreator(
         link_type="link_only",
@@ -705,11 +715,15 @@ def test_truth_space_table_from_column_vs_pandas_implementaiton_ex_unblocked():
         blocking_rules_to_generate_predictions=[block_on("first_name")],
         additional_columns_to_retain=["cluster"],
     )
-    linker_for_splink_answer = Linker([df_1, df_2], settings, database_api=DuckDBAPI())
+    linker_for_splink_answer = Linker([df_1, df_2], settings, db_api=DuckDBAPI())
 
-    df_from_splink = linker_for_splink_answer.truth_space_table_from_labels_column(
-        "cluster", positives_not_captured_by_blocking_rules_scored_as_zero=True
-    ).as_pandas_dataframe()
+    df_from_splink = (
+        linker_for_splink_answer.evaluation.accuracy_analysis_from_labels_column(
+            "cluster",
+            output_type="table",
+            positives_not_captured_by_blocking_rules_scored_as_zero=True,
+        ).as_pandas_dataframe()
+    )
 
     for _, splink_row in df_from_splink.iterrows():
         threshold = splink_row["truth_threshold"]
@@ -750,14 +764,18 @@ def test_truth_space_table_from_table_vs_pandas_cartesian():
         additional_columns_to_retain=["cluster"],
     )
 
-    linker_for_predictions = Linker(df_first_50, settings, database_api=DuckDBAPI())
-    df_predictions = linker_for_predictions.predict().as_pandas_dataframe()
+    linker_for_predictions = Linker(df_first_50, settings, db_api=DuckDBAPI())
+    df_predictions = linker_for_predictions.inference.predict().as_pandas_dataframe()
 
-    linker_for_splink_answer = Linker(df, settings, database_api=DuckDBAPI())
-    labels_input = linker_for_splink_answer.register_labels_table(labels_table)
-    df_from_splink = linker_for_splink_answer.truth_space_table_from_labels_table(
-        labels_input
-    ).as_pandas_dataframe()
+    linker_for_splink_answer = Linker(df, settings, db_api=DuckDBAPI())
+    labels_input = linker_for_splink_answer.table_management.register_labels_table(
+        labels_table
+    )
+    df_from_splink = (
+        linker_for_splink_answer.evaluation.accuracy_analysis_from_labels_table(
+            labels_input, output_type="table"
+        ).as_pandas_dataframe()
+    )
 
     for _, splink_row in df_from_splink.iterrows():
         threshold = splink_row["truth_threshold"]
@@ -806,9 +824,9 @@ def test_truth_space_table_from_table_vs_pandas_with_blocking():
     )
 
     linker_for_predictions = Linker(
-        [df_1_first_50, df_2_first_50], settings, database_api=DuckDBAPI()
+        [df_1_first_50, df_2_first_50], settings, db_api=DuckDBAPI()
     )
-    df_predictions_raw = linker_for_predictions.predict()
+    df_predictions_raw = linker_for_predictions.inference.predict()
     df_predictions_raw.as_pandas_dataframe()
     sql = f"""
     select
@@ -822,7 +840,7 @@ def test_truth_space_table_from_table_vs_pandas_with_blocking():
         cluster_r,
     from {df_predictions_raw.physical_name}
     """
-    df_predictions = linker_for_predictions.query_sql(sql)
+    df_predictions = linker_for_predictions.misc.query_sql(sql)
 
     settings = SettingsCreator(
         link_type="link_only",
@@ -835,11 +853,15 @@ def test_truth_space_table_from_table_vs_pandas_with_blocking():
         additional_columns_to_retain=["cluster"],
     )
 
-    linker_for_splink_answer = Linker([df_1, df_2], settings, database_api=DuckDBAPI())
-    labels_input = linker_for_splink_answer.register_labels_table(labels_table)
-    df_from_splink = linker_for_splink_answer.truth_space_table_from_labels_table(
-        labels_input
-    ).as_pandas_dataframe()
+    linker_for_splink_answer = Linker([df_1, df_2], settings, db_api=DuckDBAPI())
+    labels_input = linker_for_splink_answer.table_management.register_labels_table(
+        labels_table
+    )
+    df_from_splink = (
+        linker_for_splink_answer.evaluation.accuracy_analysis_from_labels_table(
+            labels_input, output_type="table"
+        ).as_pandas_dataframe()
+    )
 
     for _, splink_row in df_from_splink.iterrows():
         threshold = splink_row["truth_threshold"]

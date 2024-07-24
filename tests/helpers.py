@@ -6,16 +6,16 @@ import pandas as pd
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.types import INTEGER, TEXT
 
-from splink.duckdb.database_api import DuckDBAPI
-from splink.linker import Linker
-from splink.postgres.database_api import PostgresAPI
-from splink.spark.database_api import SparkAPI
-from splink.sqlite.database_api import SQLiteAPI
+from splink.internals.duckdb.database_api import DuckDBAPI
+from splink.internals.linker import Linker
+from splink.internals.postgres.database_api import PostgresAPI
+from splink.internals.spark.database_api import SparkAPI
+from splink.internals.sqlite.database_api import SQLiteAPI
 
 
 class TestHelper(ABC):
     @property
-    def Linker(self):
+    def Linker(self) -> Linker:
         return Linker
 
     @property
@@ -28,7 +28,7 @@ class TestHelper(ABC):
 
     def extra_linker_args(self):
         # create fresh api each time
-        return {"database_api": self.DatabaseAPI(**self.db_api_args())}
+        return {"db_api": self.DatabaseAPI(**self.db_api_args())}
 
     @property
     def date_format(self):

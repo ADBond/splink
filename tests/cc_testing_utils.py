@@ -4,12 +4,12 @@ import networkx as nx
 import pandas as pd
 from networkx.algorithms import connected_components as cc_nx
 
-from splink.connected_components import solve_connected_components
-from splink.duckdb.database_api import DuckDBAPI
-from splink.duckdb.dataframe import DuckDBDataFrame
-from splink.linker import Linker
-from splink.pipeline import CTEPipeline
-from splink.vertically_concatenate import compute_df_concat_with_tf
+from splink.internals.connected_components import solve_connected_components
+from splink.internals.duckdb.database_api import DuckDBAPI
+from splink.internals.duckdb.dataframe import DuckDBDataFrame
+from splink.internals.linker import Linker
+from splink.internals.pipeline import CTEPipeline
+from splink.internals.vertically_concatenate import compute_df_concat_with_tf
 
 
 def generate_random_graph(graph_size, seed=None):
@@ -38,14 +38,14 @@ def register_cc_df(G):
     db_api = DuckDBAPI()
 
     linker = Linker(
-        df_concat, settings_dict, input_table_aliases=table_name, database_api=db_api
+        df_concat, settings_dict, input_table_aliases=table_name, db_api=db_api
     )
 
     # re-register under our required name to run the CC function
-    linker.register_table(df_concat, table_name, overwrite=True)
+    linker.table_management.register_table(df_concat, table_name, overwrite=True)
 
     df_nodes = pd.DataFrame({"unique_id": G.nodes})
-    linker.register_table_input_nodes_concat_with_tf(df_nodes)
+    linker.table_management.register_table_input_nodes_concat_with_tf(df_nodes)
 
     # add our prediction df to our list of created tables
     predict_df = DuckDBDataFrame(table_name, table_name, db_api)
@@ -61,7 +61,6 @@ def run_cc_implementation(linker, predict_df):
     cc = solve_connected_components(
         linker,
         predict_df,
-        df_predict=None,
         concat_with_tf=concat_with_tf,
         _generated_graph=True,
     ).as_pandas_dataframe()

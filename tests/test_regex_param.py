@@ -1,8 +1,8 @@
 import pandas as pd
 import pytest
 
-import splink.comparison_level_library as cll
-from splink.column_expression import ColumnExpression
+import splink.internals.comparison_level_library as cll
+from splink.internals.column_expression import ColumnExpression
 
 from .decorator import mark_with_dialects_excluding
 
@@ -131,7 +131,7 @@ def test_regex(dialect, test_helpers, level_set, record_pairs_gamma):
     df = helper.convert_frame(df_pandas)
     linker = helper.Linker(df, settings, **helper.extra_linker_args())
 
-    linker_output = linker.predict().as_pandas_dataframe()
+    linker_output = linker.inference.predict().as_pandas_dataframe()
 
     for gamma, id_pairs in record_pairs_gamma.items():
         for left, right in id_pairs:

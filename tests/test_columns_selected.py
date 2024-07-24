@@ -4,9 +4,9 @@ import os
 
 import pandas as pd
 
-import splink.comparison_level_library as cll
-from splink.duckdb.database_api import DuckDBAPI
-from splink.linker import Linker
+import splink.internals.comparison_level_library as cll
+from splink.internals.duckdb.database_api import DuckDBAPI
+from splink.internals.linker import Linker
 
 
 def test_regression(tmp_path):
@@ -62,9 +62,9 @@ def test_regression(tmp_path):
                 output_schema="splink_in_duckdb",
             )
 
-            linker = Linker(df.copy(), settings_dict, database_api=db_api)
+            linker = Linker(df.copy(), settings_dict, db_api=db_api)
 
-            linker.predict()
+            linker.inference.predict()
 
 
 def test_discussion_example(tmp_path):
@@ -123,6 +123,6 @@ def test_discussion_example(tmp_path):
 
             db_api = DuckDBAPI()
 
-            linker = Linker(df.copy(), settings_dict, database_api=db_api)
+            linker = Linker(df.copy(), settings_dict, db_api=db_api)
 
-            linker.predict()
+            linker.inference.predict()

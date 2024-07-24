@@ -2,9 +2,9 @@ from copy import deepcopy
 
 import pandas as pd
 
-from splink.comparison_library import ExactMatch
-from splink.duckdb.database_api import DuckDBAPI
-from splink.linker import Linker
+from splink.internals.comparison_library import ExactMatch
+from splink.internals.duckdb.database_api import DuckDBAPI
+from splink.internals.linker import Linker
 
 settings_template = {
     "probability_two_random_records_match": 0.01,
@@ -68,9 +68,9 @@ def test_dedupe_only_join_condition():
     for s in [settings, settings_salt]:
         db_api = DuckDBAPI()
 
-        linker = Linker(df.copy(), s, database_api=db_api)
+        linker = Linker(df.copy(), s, db_api=db_api)
 
-        df_predict = linker.predict().as_pandas_dataframe()
+        df_predict = linker.inference.predict().as_pandas_dataframe()
 
         assert len(df_predict) == (6 * 5) / 2
 
@@ -93,9 +93,9 @@ def test_link_only_two_join_condition():
     for s in [settings, settings_salt]:
         db_api = DuckDBAPI()
 
-        linker = Linker([sds_d_only, sds_b_only], s, database_api=db_api)
+        linker = Linker([sds_d_only, sds_b_only], s, db_api=db_api)
 
-        df_predict = linker.predict().as_pandas_dataframe()
+        df_predict = linker.inference.predict().as_pandas_dataframe()
 
         assert len(df_predict) == 4
 
@@ -122,9 +122,9 @@ def test_link_only_three_join_condition():
     for s in [settings, settings_salt]:
         db_api = DuckDBAPI()
 
-        linker = Linker([sds_d_only, sds_b_only, sds_c_only], s, database_api=db_api)
+        linker = Linker([sds_d_only, sds_b_only, sds_c_only], s, db_api=db_api)
 
-        df_predict = linker.predict().as_pandas_dataframe()
+        df_predict = linker.inference.predict().as_pandas_dataframe()
 
         assert len(df_predict) == 12
 
@@ -151,9 +151,9 @@ def test_link_and_dedupe_two_join_condition():
     for s in [settings, settings_salt]:
         db_api = DuckDBAPI()
 
-        linker = Linker([sds_d_only, sds_b_only], s, database_api=db_api)
+        linker = Linker([sds_d_only, sds_b_only], s, db_api=db_api)
 
-        df_predict = linker.predict().as_pandas_dataframe()
+        df_predict = linker.inference.predict().as_pandas_dataframe()
 
         assert len(df_predict) == (4 * 3) / 2
 
@@ -180,9 +180,9 @@ def test_link_and_dedupe_three_join_condition():
     for s in [settings, settings_salt]:
         db_api = DuckDBAPI()
 
-        linker = Linker([sds_d_only, sds_b_only, sds_c_only], s, database_api=db_api)
+        linker = Linker([sds_d_only, sds_b_only, sds_c_only], s, db_api=db_api)
 
-        df_predict = linker.predict().as_pandas_dataframe()
+        df_predict = linker.inference.predict().as_pandas_dataframe()
 
         assert len(df_predict) == (6 * 5) / 2
 

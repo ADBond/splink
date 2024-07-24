@@ -3,10 +3,11 @@ import gc
 import pandas as pd
 import pytest
 
-import splink.comparison_level_library as cll
-import splink.comparison_library as cl
-import splink.comparison_template_library as ctl
-from splink.column_expression import ColumnExpression
+import splink.internals.comparison_level_library as cll
+import splink.internals.comparison_library as cl
+from splink.internals.column_expression import ColumnExpression
+from splink.internals.comparison_creator import ComparisonCreator
+from splink.internals.comparison_level_creator import ComparisonLevelCreator
 
 from .decorator import mark_with_dialects_excluding
 
@@ -76,7 +77,7 @@ def test_cll_creators_run_predict(dialect, test_helpers):
     df = helper.load_frame_from_csv("./tests/datasets/fake_1000_from_splink_demos.csv")
 
     linker = helper.Linker(df, cll_settings, **helper.extra_linker_args())
-    linker.predict()
+    linker.inference.predict()
 
 
 @mark_with_dialects_excluding()
@@ -172,7 +173,7 @@ def test_cl_creators_run_predict(dialect, test_helpers):
 
     linker = helper.Linker(df, cl_settings, **helper.extra_linker_args())
 
-    linker.predict()
+    linker.inference.predict()
 
 
 @mark_with_dialects_excluding("sqlite")
@@ -201,7 +202,7 @@ def test_regex_fall_through(dialect, test_helpers):
     }
 
     linker = helper.Linker(df, settings, **helper.extra_linker_args())
-    df_e = linker.predict().as_pandas_dataframe()
+    df_e = linker.inference.predict().as_pandas_dataframe()
 
     # only entry should be in Else level
     assert df_e["gamma_name"][0] == 0
@@ -231,46 +232,36 @@ def test_null_pattern_match(dialect, test_helpers):
     }
 
     linker = helper.Linker(df, settings, **helper.extra_linker_args())
-    df_e = linker.predict().as_pandas_dataframe()
+    df_e = linker.inference.predict().as_pandas_dataframe()
 
     # only entry should be in Null level
     assert df_e["gamma_name"][0] == -1
 
 
-comparison_email_ctl = ctl.EmailComparison(
+comparison_email_cl = cl.EmailComparison(
     "email",
-    invalid_emails_as_null=True,
-    include_domain_match_level=True,
-    fuzzy_metric="levenshtein",
-    fuzzy_thresholds=[1, 3],
 )
-comparison_name_ctl = ctl.NameComparison(
+comparison_name_cl = cl.NameComparison(
     "first_name",
-    include_exact_match_level=False,
-    phonetic_col_name="surname",  # ignore the fact this is nonsense
-    fuzzy_metric="levenshtein",
-    fuzzy_thresholds=[1, 2],
 )
 
-comparison_dob_ctl = ctl.DateComparison(
+comparison_dob_cl = cl.DateOfBirthComparison(
     ColumnExpression("dob"),
-    datetime_metrics=["day", "month", "year"],
-    datetime_thresholds=[1, 2, 1],
     input_is_string=True,
-    use_damerau_levenshtein=False,
 )
-comparison_forenamesurname_ctl = ctl.ForenameSurnameComparison(
-    "first_name", "surname", fuzzy_metric="levenshtein", fuzzy_thresholds=[2]
+comparison_forenamesurname_cl = cl.ForenameSurnameComparison(
+    "first_name",
+    "surname",
 )
-ctl_settings = cl_settings
-ctl_settings = {
+
+cl_settings_2 = {
     "link_type": "dedupe_only",
     "comparisons": [
-        comparison_name_ctl,
+        comparison_name_cl,
         # obviously not realistic:
-        comparison_forenamesurname_ctl,
-        comparison_email_ctl,
-        comparison_dob_ctl,
+        comparison_forenamesurname_cl,
+        comparison_email_cl,
+        comparison_dob_cl,
     ],
     "blocking_rules_to_generate_predictions": [
         "l.dob = r.dob",
@@ -279,17 +270,17 @@ ctl_settings = {
 }
 
 
-@mark_with_dialects_excluding("sqlite")
+@mark_with_dialects_excluding("sqlite", "postgres")
 def test_ctl_creators_run_predict(dialect, test_helpers):
     helper = test_helpers[dialect]
     df = helper.load_frame_from_csv("./tests/datasets/fake_1000_from_splink_demos.csv")
 
-    linker = helper.Linker(df, ctl_settings, **helper.extra_linker_args())
-    linker.predict()
+    linker = helper.Linker(df, cl_settings_2, **helper.extra_linker_args())
+    linker.inference.predict()
 
 
 def test_custom_dialect_no_string_lookup():
-    from splink.dialects import SplinkDialect
+    from splink.internals.dialects import SplinkDialect
 
     # force garbage collection so we forget about any other test dialects
     # previously defined
@@ -311,7 +302,7 @@ def test_custom_dialect_no_string_lookup():
 
 
 def test_custom_dialect_duplicate_string_lookup():
-    from splink.dialects import SplinkDialect
+    from splink.internals.dialects import SplinkDialect
 
     # force garbage collection so we forget about any other test dialects
     # previously defined
@@ -339,7 +330,7 @@ def test_custom_dialect_duplicate_string_lookup():
 
 
 def test_valid_custom_dialect():
-    from splink.dialects import SplinkDialect
+    from splink.internals.dialects import SplinkDialect
 
     # force garbage collection so we forget about any other test dialects
     # previously defined
@@ -389,3 +380,68 @@ def test_cl_configure():
     with pytest.raises(ValueError):
         # too few probabilities
         cl.LevenshteinAtThresholds("col", [1, 2]).configure(u_probabilities=[0.5, 0.5])
+
+
+def test_comparison_reconfigure():
+    def assert_tf_adjustments_on_off(
+        comparison: ComparisonCreator, tf_adjustments_on: bool = False
+    ) -> None:
+        levels = comparison.get_configured_comparison_levels()
+        # the comparisons in this test should have null, then exact:
+        exact_match_comparison_level = levels[1]
+        # check we _really_ have an exact match level
+        assert exact_match_comparison_level.is_exact_match_level
+
+        cl_dict = exact_match_comparison_level.create_level_dict("duckdb")
+        if tf_adjustments_on:
+            assert "tf_adjustment_column" in cl_dict
+        else:
+            assert "tf_adjustment_column" not in cl_dict
+
+    plain_comparison = cl.LevenshteinAtThresholds("col")
+    assert_tf_adjustments_on_off(plain_comparison, tf_adjustments_on=False)
+
+    comp_with_tf = plain_comparison.configure(term_frequency_adjustments=True)
+    assert_tf_adjustments_on_off(comp_with_tf, tf_adjustments_on=True)
+
+    # turn tf adjustments off again
+    comp_without_tf = comp_with_tf.configure(term_frequency_adjustments=False)
+    assert_tf_adjustments_on_off(comp_without_tf, tf_adjustments_on=False)
+
+
+def test_comparison_level_reconfigure():
+    def assert_tf_adjustments_on_off(
+        comparison_level: ComparisonLevelCreator, tf_adjustments_on: bool = False
+    ) -> None:
+        cl_dict = comparison_level.create_level_dict("duckdb")
+        if tf_adjustments_on:
+            assert "tf_adjustment_column" in cl_dict
+        else:
+            assert "tf_adjustment_column" not in cl_dict
+
+    exact_match_comparison_level = cll.ExactMatchLevel("col")
+    assert_tf_adjustments_on_off(exact_match_comparison_level, tf_adjustments_on=False)
+
+    exact_match_with_tf = exact_match_comparison_level.configure(
+        tf_adjustment_column="col"
+    )
+    assert_tf_adjustments_on_off(exact_match_with_tf, tf_adjustments_on=True)
+
+    # turn tf adjustments off again
+    exact_match_without_tf = exact_match_with_tf.configure(tf_adjustment_column=None)
+    assert_tf_adjustments_on_off(exact_match_without_tf, tf_adjustments_on=False)
+
+
+def test_sequential_configurations():
+    # want to check that configurations don't forget about previously-set options
+    em_with_m = cl.ExactMatch("col").configure(m_probabilities=[0.8, 0.2])
+    assert em_with_m.m_probabilities == [0.8, 0.2]
+    assert not em_with_m.term_frequency_adjustments
+
+    em_with_m.configure(term_frequency_adjustments=True)
+    assert em_with_m.term_frequency_adjustments
+    assert em_with_m.m_probabilities == [0.8, 0.2]
+
+    em_with_m.configure(m_probabilities=[0.9, 0.1])
+    assert em_with_m.m_probabilities == [0.9, 0.1]
+    assert em_with_m.term_frequency_adjustments

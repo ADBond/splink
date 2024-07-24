@@ -1,9 +1,9 @@
 import pandas as pd
 
-import splink.comparison_library as cl
-from splink.column_expression import ColumnExpression
-from splink.duckdb.database_api import DuckDBAPI
-from splink.linker import Linker
+import splink.internals.comparison_library as cl
+from splink.internals.column_expression import ColumnExpression
+from splink.internals.duckdb.database_api import DuckDBAPI
+from splink.internals.linker import Linker
 
 
 def test_distance_function_comparison():
@@ -31,9 +31,9 @@ def test_distance_function_comparison():
     }
     db_api = DuckDBAPI()
 
-    linker = Linker(df, settings, database_api=db_api)
+    linker = Linker(df, settings, db_api=db_api)
 
-    df_pred = linker.predict().as_pandas_dataframe()
+    df_pred = linker.inference.predict().as_pandas_dataframe()
 
     expected_gamma_counts = {
         "forename": {
@@ -84,8 +84,8 @@ def test_set_to_lowercase():
 
     db_api = DuckDBAPI()
 
-    linker = Linker(df, settings, database_api=db_api)
-    df_e = linker.predict().as_pandas_dataframe()
+    linker = Linker(df, settings, db_api=db_api)
+    df_e = linker.inference.predict().as_pandas_dataframe()
 
     row = dict(df_e.query("id_l == 1 and id_r == 2").iloc[0])
     assert row["gamma_forename"] == 1

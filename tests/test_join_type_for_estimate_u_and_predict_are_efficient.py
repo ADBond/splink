@@ -3,9 +3,9 @@ import re
 
 import pandas as pd
 
-import splink.comparison_library as cl
-from splink.duckdb.database_api import DuckDBAPI
-from splink.linker import Linker
+import splink.internals.comparison_library as cl
+from splink.internals.duckdb.database_api import DuckDBAPI
+from splink.internals.linker import Linker
 
 
 # Create a log handler that allows us to captured logged messages to a python list
@@ -117,22 +117,23 @@ def test_dedupe_only():
     linker = Linker(
         df_one,
         settings,
-        database_api=db_api,
+        db_api=db_api,
         set_up_basic_logging=False,
     )
     logging.getLogger("splink").setLevel(1)
 
-    linker.estimate_u_using_random_sampling(max_pairs=1000)
+    linker.training.estimate_u_using_random_sampling(max_pairs=1000)
     all_log_messages = "\n".join(log_list)
     all_log_messages = re.sub(r"\s+", " ", all_log_messages)
+
     assert (
-        "from __splink__df_concat_with_tf_sample as l inner join __splink__df_concat_with_tf_sample as r"  # noqa: E501
+        "from __splink__df_concat_sample as l inner join __splink__df_concat_sample as r"  # noqa: E501
         in all_log_messages
     )
 
     handler.log_list.clear()
 
-    linker.predict()
+    linker.inference.predict()
 
     all_log_messages = "\n".join(log_list)
     all_log_messages = re.sub(r"\s+", " ", all_log_messages)
@@ -169,25 +170,25 @@ def test_link_and_dedupe():
     linker = Linker(
         [df_one, df_two],
         settings,
-        database_api=db_api,
+        db_api=db_api,
         input_table_aliases=["df_one", "df_two"],
         set_up_basic_logging=False,
     )
 
     handler.log_list.clear()
     logging.getLogger("splink").setLevel(1)
-    linker.estimate_u_using_random_sampling(max_pairs=1000)
+    linker.training.estimate_u_using_random_sampling(max_pairs=1000)
 
     all_log_messages = "\n".join(log_list)
     all_log_messages = re.sub(r"\s+", " ", all_log_messages)
     assert (
-        "from __splink__df_concat_with_tf_sample as l inner join __splink__df_concat_with_tf_sample as r"  # noqa: E501
+        "from __splink__df_concat_sample as l inner join __splink__df_concat_sample as r"  # noqa: E501
         in all_log_messages
     )
 
     log_list.clear()
 
-    linker.predict()
+    linker.inference.predict()
 
     all_log_messages = "\n".join(log_list)
     all_log_messages = re.sub(r"\s+", " ", all_log_messages)
@@ -225,25 +226,25 @@ def test_link_only_two():
     linker = Linker(
         [df_one, df_two],
         settings,
-        database_api=db_api,
+        db_api=db_api,
         input_table_aliases=["df_one", "df_two"],
         set_up_basic_logging=False,
     )
 
     log_list.clear()
     logging.getLogger("splink").setLevel(1)
-    linker.estimate_u_using_random_sampling(max_pairs=1000)
+    linker.training.estimate_u_using_random_sampling(max_pairs=1000)
 
     all_log_messages = "\n".join(log_list)
     all_log_messages = re.sub(r"\s+", " ", all_log_messages)
     assert (
-        "from __splink__df_concat_with_tf_sample_left as l inner join __splink__df_concat_with_tf_sample_right as r"  # noqa: E501
+        "from __splink__df_concat_sample_left as l inner join __splink__df_concat_sample_right as r"  # noqa: E501
         in all_log_messages
     )
 
     log_list.clear()
 
-    linker.predict()
+    linker.inference.predict()
 
     all_log_messages = "\n".join(log_list)
     all_log_messages = re.sub(r"\s+", " ", all_log_messages)
@@ -282,25 +283,25 @@ def test_link_only_three():
     linker = Linker(
         [df_one, df_two, df_three],
         settings,
-        database_api=db_api,
+        db_api=db_api,
         input_table_aliases=["df_one", "df_two", "df_three"],
         set_up_basic_logging=False,
     )
 
     log_list.clear()
     logging.getLogger("splink").setLevel(1)
-    linker.estimate_u_using_random_sampling(max_pairs=1000)
+    linker.training.estimate_u_using_random_sampling(max_pairs=1000)
 
     all_log_messages = "\n".join(log_list)
     all_log_messages = re.sub(r"\s+", " ", all_log_messages)
     assert (
-        "from __splink__df_concat_with_tf_sample as l inner join __splink__df_concat_with_tf_sample as r"  # noqa: E501
+        "from __splink__df_concat_sample as l inner join __splink__df_concat_sample as r"  # noqa: E501
         in all_log_messages
     )
 
     log_list.clear()
 
-    linker.predict()
+    linker.inference.predict()
 
     all_log_messages = "\n".join(log_list)
     all_log_messages = re.sub(r"\s+", " ", all_log_messages)
