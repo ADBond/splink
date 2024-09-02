@@ -64,8 +64,8 @@ def estimate_u_values(linker: Linker, max_pairs: float, seed: int = None) -> Non
     logger.info("----- Estimating u probabilities using random sampling -----")
     pipeline = CTEPipeline()
 
-    pipeline = enqueue_df_concat(linker, pipeline)
 
+    pipeline = enqueue_df_concat(linker, pipeline, use_cache=False)
     original_settings_obj = linker._settings_obj
 
     training_linker: Linker = deepcopy(linker)
