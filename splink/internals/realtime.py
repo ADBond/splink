@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 from typing import Any
-from weakref import WeakKeyDictionary
+from weakref import ref
 
 from splink.internals.accuracy import _select_found_by_blocking_rules
 from splink.internals.database_api import AcceptableInputTableType, DatabaseAPISubClass
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 class SQLCache:
     def __init__(self):
-        self._cache: WeakKeyDictionary = WeakKeyDictionary()
+        self._cache = {}
 
     # TODO: if we have path/string, do we want to think about behaviour if underlying
     # file changes between calls?
@@ -27,23 +27,29 @@ class SQLCache:
     # there are any gotchas
     # TODO: maybe check if string interning affects this in some way
     def get(self, settings: SettingsCreator | dict[str, Any] | Path | str, new_uid: str) -> str | None:
-        if settings not in self._cache:
+        settings_id = id(settings)
+        if settings_id not in self._cache:
+            return None
+        sql, cached_uid, settings_ref = self._cache[settings_id]
+        # if reference is dead, delete cache entry and return nowt
+        if settings_ref() is None:
+            del self._cache[settings_id]
             return None
 
         logger.log(
             logging.WARNING, f"Getting cache for {settings_id}"
         )
-        sql, cached_uid = self._cache[settings]
         if cached_uid:
             sql = sql.replace(cached_uid, new_uid)
         return sql
 
     def set(self, settings: SettingsCreator | dict[str, Any] | Path | str, sql: str | None, uid: str | None) -> None:
+        settings_id = id(settings)
         if sql is not None:
             logger.log(
                 logging.WARNING, f"Setting cache for {settings_id}"
             )
-            self._cache[settings] = (sql, uid)
+            self._cache[settings_id] = (sql, uid, ref(settings))
 
 
 _sql_cache = SQLCache()
@@ -152,6 +158,6 @@ def compare_records(
         pipeline.enqueue_sql(sql, "__splink__found_by_blocking_rules")
 
     predictions = db_api.sql_pipeline_to_splink_dataframe(pipeline)
-    _sql_cache.set(settings_id, predictions.sql_used_to_create, uid)
+    _sql_cache.set(settings, predictions.sql_used_to_create, uid)
 
     return predictions
