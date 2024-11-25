@@ -15,7 +15,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        # run lots of versions to catch an error!
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.8", "3.9", "3.10", "3.11", "3.12", "3.8", "3.9", "3.10", "3.11", "3.12", "3.8", "3.9", "3.10", "3.11", "3.12"]
     name: Run tests with Python ${{ matrix.python-version }}
     steps:
       - uses: actions/checkout@v4
@@ -36,14 +37,4 @@ jobs:
       - name: Run tests with coverage
         run: |
           poetry add "pytest-cov>=5.0.0"
-          poetry run pytest -v --durations=0 -m "duckdb_only or core" --cov=splink --cov-report=xml --cov-report=term tests/
-
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v3
-        with:
-          name: coverage-report
-          path: coverage.xml
-      - name: Upload to Codecov
-        uses: codecov/codecov-action@v3
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
+          poetry run pytest -v --durations=0 -m "duckdb" tests/test_realtime.py
