@@ -112,6 +112,8 @@ def compare_records(
                     templated_name="__splink__realtime_compare_records",
                     physical_name=f"__splink__realtime_compare_records_{uid}",
                 ), dummy
+    else:
+        dummy = None
 
     if not isinstance(settings, SettingsCreator):
         settings_creator = SettingsCreator.from_path_or_dict(settings)
@@ -161,4 +163,4 @@ def compare_records(
     predictions = db_api.sql_pipeline_to_splink_dataframe(pipeline)
     _sql_cache.set(settings, predictions.sql_used_to_create, uid)
 
-    return predictions, None
+    return predictions, dummy
