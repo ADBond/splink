@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 from typing import Any
 
@@ -13,6 +14,7 @@ from splink.internals.predict import (
 from splink.internals.settings_creator import SettingsCreator
 from splink.internals.splink_dataframe import SplinkDataFrame
 
+logger = logging.getLogger(__name__)
 
 class SQLCache:
     def __init__(self):
@@ -22,6 +24,9 @@ class SQLCache:
         if settings_id not in self._cache:
             return None
 
+        logger.log(
+            logging.WARNING, f"Getting cache for {settings_id}"
+        )
         sql, cached_uid = self._cache[settings_id]
         if cached_uid:
             sql = sql.replace(cached_uid, new_uid)
@@ -30,6 +35,9 @@ class SQLCache:
     def set(self, settings_id: int, sql: str | None, uid: str | None) -> None:
         if sql is not None:
             self._cache[settings_id] = (sql, uid)
+            logger.log(
+                logging.WARNING, f"Setting cache for {settings_id}"
+            )
 
 
 _sql_cache = SQLCache()
@@ -83,6 +91,7 @@ def compare_records(
     df_records_right.templated_name = "__splink__compare_records_right"
 
     settings_id = id(settings)
+    logging.log(logging.WARNING, f"Settings object had id: {settings_id}")
     if use_sql_from_cache:
         if cached_sql := _sql_cache.get(settings_id, uid):
             return db_api._sql_to_splink_dataframe(
