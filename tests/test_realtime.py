@@ -9,6 +9,7 @@ from splink.internals.realtime import compare_records
 
 from .decorator import mark_with_dialects_excluding
 
+dummies = []
 
 @mark_with_dialects_excluding()
 def test_realtime_cache_two_records(test_helpers, dialect):
@@ -80,30 +81,42 @@ def test_realtime_cache_two_records(test_helpers, dialect):
         retain_matching_columns=True,
     )
 
-    res1_2_first = compare_records(df1, df2, settings, db_api).as_record_dict()[0][
+    res1_2_first, dummy = compare_records(df1, df2, settings, db_api)
+    dummies.append(dummy)
+    res1_2_first = res1_2_first.as_record_dict()[0][
         "match_weight"
     ]
 
-    res1_2_not_from_cache = compare_records(
+    res1_2_not_from_cache, dummy = compare_records(
         df1, df2, settings, db_api, use_sql_from_cache=False
-    ).as_record_dict()[0]["match_weight"]
+    )
+    dummies.append(dummy)
+    res1_2_not_from_cache = res1_2_not_from_cache.as_record_dict()[0]["match_weight"]
 
-    res1_2_from_cache = compare_records(
+    res1_2_from_cache, dummy = compare_records(
         df1, df2, settings, db_api, use_sql_from_cache=True
-    ).as_record_dict()[0]["match_weight"]
+    )
+    dummies.append(dummy)
+    res1_2_from_cache = res1_2_from_cache.as_record_dict()[0]["match_weight"]
 
     assert res1_2_first == pytest.approx(res1_2_not_from_cache)
     assert res1_2_first == pytest.approx(res1_2_from_cache)
 
-    res1_3_first = compare_records(df1, df3, settings, db_api).as_record_dict()[0][
+    res1_3_first, dummy = compare_records(df1, df3, settings, db_api)
+    dummies.append(dummy)
+    res1_3_first = res1_3_first.as_record_dict()[0][
         "match_weight"
     ]
-    res1_3_not_from_cache = compare_records(
+    res1_3_not_from_cache, dummy = compare_records(
         df1, df3, settings, db_api, use_sql_from_cache=False
-    ).as_record_dict()[0]["match_weight"]
-    res1_3_from_cache = compare_records(
+    )
+    dummies.append(dummy)
+    res1_3_not_from_cache = res1_3_not_from_cache.as_record_dict()[0]["match_weight"]
+    res1_3_from_cache, dummy = compare_records(
         df1, df3, settings, db_api, use_sql_from_cache=True
-    ).as_record_dict()[0]["match_weight"]
+    )
+    dummies.append(dummy)
+    res1_3_from_cache = res1_3_from_cache.as_record_dict()[0]["match_weight"]
 
     assert res1_3_first == pytest.approx(res1_3_not_from_cache)
     assert res1_3_first == pytest.approx(res1_3_from_cache)
@@ -229,13 +242,19 @@ def test_realtime_cache_multiple_records(test_helpers, dialect):
     )
 
     # Compare df1 and df2
-    res1_2_first = compare_records(df1, df2, settings, db_api).as_pandas_dataframe()
-    res1_2_not_from_cache = compare_records(
+    res1_2_first, dummy = compare_records(df1, df2, settings, db_api)
+    dummies.append(dummy)
+    res1_2_first = res1_2_first.as_pandas_dataframe()
+    res1_2_not_from_cache, dummy = compare_records(
         df1, df2, settings, db_api, use_sql_from_cache=False
-    ).as_pandas_dataframe()
-    res1_2_from_cache = compare_records(
+    )
+    dummies.append(dummy)
+    res1_2_not_from_cache = res1_2_not_from_cache.as_pandas_dataframe()
+    res1_2_from_cache, dummy = compare_records(
         df1, df2, settings, db_api, use_sql_from_cache=True
-    ).as_pandas_dataframe()
+    )
+    dummies.append(dummy)
+    res1_2_from_cache = res1_2_from_cache.as_pandas_dataframe()
 
     # Compare match weights using pandas merge
     merged = res1_2_first.merge(
@@ -260,13 +279,19 @@ def test_realtime_cache_multiple_records(test_helpers, dialect):
         check_names=False,
     )
 
-    res1_3_first = compare_records(df1, df3, settings, db_api).as_pandas_dataframe()
-    res1_3_not_from_cache = compare_records(
+    res1_3_first, dummy = compare_records(df1, df3, settings, db_api)
+    dummies.append(dummy)
+    res1_3_first = res1_3_first.as_pandas_dataframe()
+    res1_3_not_from_cache, dummy = compare_records(
         df1, df3, settings, db_api, use_sql_from_cache=False
-    ).as_pandas_dataframe()
-    res1_3_from_cache = compare_records(
+    )
+    dummies.append(dummy)
+    res1_3_not_from_cache = res1_3_not_from_cache.as_pandas_dataframe()
+    res1_3_from_cache, dummy = compare_records(
         df1, df3, settings, db_api, use_sql_from_cache=True
-    ).as_pandas_dataframe()
+    )
+    dummies.append(dummy)
+    res1_3_from_cache = res1_3_from_cache.as_pandas_dataframe()
 
     merged = res1_3_first.merge(
         res1_3_not_from_cache,
@@ -340,17 +365,26 @@ def test_realtime_cache_different_settings(test_helpers, dialect):
         blocking_rules_to_generate_predictions=[block_on("first_name")],
     )
 
-    res1 = compare_records(
+    res1, dummy = compare_records(
         df1, df2, settings_1, db_api, use_sql_from_cache=True
-    ).as_record_dict()[0]["match_weight"]
+    )
+    dummies.append(dummy)
+    res1 = res1.as_record_dict()[0]["match_weight"]
 
-    res2 = compare_records(
+    res2, dummy = compare_records(
         df1, df2, settings_2, db_api, use_sql_from_cache=True
-    ).as_record_dict()[0]["match_weight"]
+    )
+    dummies.append(dummy)
+    res2 = res2.as_record_dict()[0]["match_weight"]
 
     assert res1 != pytest.approx(res2)
 
-    res1_again = compare_records(
+    res1_again, dummy = compare_records(
         df1, df2, settings_1, db_api, use_sql_from_cache=True
-    ).as_record_dict()[0]["match_weight"]
+    )
+    dummies.append(dummy)
+    res1_again = res1_again.as_record_dict()[0]["match_weight"]
     assert res1 == pytest.approx(res1_again)
+
+    print(dummies)
+    assert True not in dummies

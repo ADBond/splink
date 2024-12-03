@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 from typing import Any
+from weakref import ref
 
 from splink.internals.accuracy import _select_found_by_blocking_rules
 from splink.internals.database_api import AcceptableInputTableType, DatabaseAPISubClass
@@ -13,23 +15,41 @@ from splink.internals.predict import (
 from splink.internals.settings_creator import SettingsCreator
 from splink.internals.splink_dataframe import SplinkDataFrame
 
+logger = logging.getLogger(__name__)
 
 class SQLCache:
     def __init__(self):
-        self._cache: dict[int, tuple[str, str | None]] = {}
+        self._cache = {}
 
-    def get(self, settings_id: int, new_uid: str) -> str | None:
+    # TODO: if we have path/string, do we want to think about behaviour if underlying
+    # file changes between calls?
+    # TODO: might need to think about how equality works with WeakKeyDictionary in case
+    # there are any gotchas
+    # TODO: maybe check if string interning affects this in some way
+    def get(self, settings: SettingsCreator | dict[str, Any] | Path | str, new_uid: str) -> str | None:
+        settings_id = id(settings)
         if settings_id not in self._cache:
-            return None
+            return None, None
+        sql, cached_uid, settings_ref = self._cache[settings_id]
+        # if reference is dead, delete cache entry and return nowt
+        if settings_ref() is None:
+            del self._cache[settings_id]
+            return None, True
 
-        sql, cached_uid = self._cache[settings_id]
+        logger.log(
+            logging.WARNING, f"Getting cache for {settings_id}"
+        )
         if cached_uid:
             sql = sql.replace(cached_uid, new_uid)
-        return sql
+        return sql, None
 
-    def set(self, settings_id: int, sql: str | None, uid: str | None) -> None:
+    def set(self, settings: SettingsCreator | dict[str, Any] | Path | str, sql: str | None, uid: str | None) -> None:
+        settings_id = id(settings)
         if sql is not None:
-            self._cache[settings_id] = (sql, uid)
+            logger.log(
+                logging.WARNING, f"Setting cache for {settings_id}"
+            )
+            self._cache[settings_id] = (sql, uid, ref(settings))
 
 
 _sql_cache = SQLCache()
@@ -83,13 +103,17 @@ def compare_records(
     df_records_right.templated_name = "__splink__compare_records_right"
 
     settings_id = id(settings)
+    logging.log(logging.WARNING, f"Settings object had id: {settings_id}")
     if use_sql_from_cache:
-        if cached_sql := _sql_cache.get(settings_id, uid):
+        cached_sql, dummy = _sql_cache.get(settings, uid)
+        if cached_sql:
             return db_api._sql_to_splink_dataframe(
-                cached_sql,
-                templated_name="__splink__realtime_compare_records",
-                physical_name=f"__splink__realtime_compare_records_{uid}",
-            )
+                    cached_sql,
+                    templated_name="__splink__realtime_compare_records",
+                    physical_name=f"__splink__realtime_compare_records_{uid}",
+                ), dummy
+    else:
+        dummy = None
 
     if not isinstance(settings, SettingsCreator):
         settings_creator = SettingsCreator.from_path_or_dict(settings)
@@ -137,6 +161,6 @@ def compare_records(
         pipeline.enqueue_sql(sql, "__splink__found_by_blocking_rules")
 
     predictions = db_api.sql_pipeline_to_splink_dataframe(pipeline)
-    _sql_cache.set(settings_id, predictions.sql_used_to_create, uid)
+    _sql_cache.set(settings, predictions.sql_used_to_create, uid)
 
-    return predictions
+    return predictions, dummy
