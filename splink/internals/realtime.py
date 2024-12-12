@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import logging
 from pathlib import Path
 from typing import Any
@@ -25,9 +26,13 @@ class SQLCache:
     # TODO: if we have path/string, do we want to think about behaviour if underlying
     # file changes between calls?
     def get(
-        self, settings: SettingsCreator | dict[str, Any] | Path | str, new_uid: str
+        self,
+        settings: SettingsCreator | dict[str, Any] | Path | str,
+        new_uid: str,
+        *,
+        sql_dialect_str: str,
     ) -> str | None:
-        settings_id = self._cache_id(settings)
+        settings_id = self._cache_id(settings, sql_dialect_str)
         if settings_id not in self._cache:
             return None, None
         sql, cached_uid, settings_ref = self._cache[settings_id]
@@ -46,9 +51,11 @@ class SQLCache:
         settings: SettingsCreator | dict[str, Any] | Path | str,
         sql: str | None,
         uid: str | None,
+        *,
+        sql_dialect_str: str,
     ) -> None:
         if sql is not None:
-            settings_id = self._cache_id(settings)
+            settings_id = self._cache_id(settings, sql_dialect_str)
             logger.log(logging.WARNING, f"Setting cache for {settings_id}")
             # kind of hacky
             # allows us to not need to special-case retrieval - will appear as though
@@ -56,19 +63,29 @@ class SQLCache:
             settings_ref = (
                 ref(settings)
                 if isinstance(settings, SettingsCreator)
-                else (lambda x: True)
+                else (lambda: True)
             )
             self._cache[settings_id] = (sql, uid, settings_ref)
 
     @staticmethod
-    def _cache_id(settings: SettingsCreator | dict[str, Any] | Path | str):
+    def _cache_id(
+        settings: SettingsCreator | dict[str, Any] | Path | str, sql_dialect_str: str
+    ):
         if isinstance(settings, SettingsCreator):
             return str(id(settings))
         if isinstance(settings, str):
             return settings
         if isinstance(settings, Path):
             return str(settings)
-        # TODO: dict?
+        # we have a dict
+        try:
+            key = json.dumps(settings)
+        except TypeError:
+            settings_dict = SettingsCreator(**settings).create_settings_dict(
+                sql_dialect_str=sql_dialect_str
+            )
+            key = json.dumps(settings_dict)
+        return key
 
 
 _sql_cache = SQLCache()
@@ -96,6 +113,7 @@ def compare_records(
     global _sql_cache
 
     uid = ascii_uid(8)
+    sql_dialect_str = db_api.sql_dialect.sql_dialect_str
 
     if isinstance(record_1, dict):
         to_register_left: AcceptableInputTableType = [record_1]
@@ -124,7 +142,9 @@ def compare_records(
     settings_id = id(settings)
     logging.log(logging.WARNING, f"Settings object had id: {settings_id}")
     if use_sql_from_cache:
-        cached_sql, dummy = _sql_cache.get(settings, uid)
+        cached_sql, dummy = _sql_cache.get(
+            settings, uid, sql_dialect_str=sql_dialect_str
+        )
         if cached_sql:
             return db_api._sql_to_splink_dataframe(
                 cached_sql,
@@ -180,6 +200,8 @@ def compare_records(
         pipeline.enqueue_sql(sql, "__splink__found_by_blocking_rules")
 
     predictions = db_api.sql_pipeline_to_splink_dataframe(pipeline)
-    _sql_cache.set(settings, predictions.sql_used_to_create, uid)
+    _sql_cache.set(
+        settings, predictions.sql_used_to_create, uid, sql_dialect_str=sql_dialect_str
+    )
 
     return predictions, dummy
