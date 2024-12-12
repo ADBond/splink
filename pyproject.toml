@@ -124,6 +124,7 @@ markers = [
     "postgres",
     "postgres_only",
 ]
+log_cli = true
 
 [tool.mypy]
 packages = "splink"
