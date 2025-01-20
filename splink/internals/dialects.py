@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractproperty
-from typing import TYPE_CHECKING, Type, TypeVar, final
+from typing import TYPE_CHECKING, Literal, Type, TypeVar, final
 
 if TYPE_CHECKING:
     from splink.internals.comparison_level_library import (
@@ -109,6 +109,32 @@ class SplinkDialect(ABC):
             "'Cosine Similarity' function"
         )
 
+    @property
+    def array_max_function_name(self):
+        raise NotImplementedError(
+            f"Backend '{self.sql_dialect_str}' does not have an 'Array max' function"
+        )
+
+    @property
+    def array_min_function_name(self):
+        raise NotImplementedError(
+            f"Backend '{self.sql_dialect_str}' does not have an 'Array min' function"
+        )
+
+    @property
+    def array_transform_function_name(self):
+        raise NotImplementedError(
+            f"Backend '{self.sql_dialect_str}' does not have an "
+            "'Array transform' function"
+        )
+
+    @property
+    def array_first_index(self):
+        raise NotImplementedError(
+            f"Backend '{self.sql_dialect_str}' does not have a "
+            "first array index defined"
+        )
+
     def random_sample_sql(
         self, proportion, sample_size, seed=None, table=None, unique_id=None
     ):
@@ -164,6 +190,14 @@ class SplinkDialect(ABC):
             "'regex_extract' function"
         )
 
+    def access_extreme_array_element(
+        self, name: str, first_or_last: Literal["first", "last"]
+    ) -> str:
+        raise NotImplementedError(
+            f"Backend '{self.sql_dialect_str}' does not have an "
+            "'access_extreme_array_element' function"
+        )
+
     def explode_arrays_sql(
         self,
         tbl_name: str,
@@ -201,6 +235,22 @@ class DuckDBDialect(SplinkDialect):
     @property
     def jaccard_function_name(self):
         return "jaccard"
+
+    @property
+    def array_max_function_name(self):
+        return "list_max"
+
+    @property
+    def array_min_function_name(self):
+        return "list_min"
+
+    @property
+    def array_transform_function_name(self):
+        return "list_transform"
+
+    @property
+    def array_first_index(self):
+        return 1
 
     @property
     def default_date_format(self):
@@ -245,6 +295,18 @@ class DuckDBDialect(SplinkDialect):
             return f"USING SAMPLE bernoulli({percent}%) REPEATABLE({seed})"
         else:
             return f"USING SAMPLE {percent}% (bernoulli)"
+
+    def access_extreme_array_element(
+        self, name: str, first_or_last: Literal["first", "last"]
+    ) -> str:
+        if first_or_last == "first":
+            return f"{name}[{self.array_first_index}]"
+        if first_or_last == "last":
+            return f"{name}[-1]"
+        raise ValueError(
+            f"Argument 'first_or_last' should be 'first' or 'last', "
+            f"received: '{first_or_last}'"
+        )
 
     def explode_arrays_sql(
         self,
@@ -302,6 +364,22 @@ class SparkDialect(SplinkDialect):
         return "jaccard"
 
     @property
+    def array_max_function_name(self):
+        return "array_max"
+
+    @property
+    def array_min_function_name(self):
+        return "array_min"
+
+    @property
+    def array_transform_function_name(self):
+        return "transform"
+
+    @property
+    def array_first_index(self):
+        return 0
+
+    @property
     def default_date_format(self):
         return "yyyy-MM-dd"
 
@@ -338,6 +416,18 @@ class SparkDialect(SplinkDialect):
             return f" ORDER BY rand({seed}) LIMIT {round(sample_size)}"
         else:
             return f" TABLESAMPLE ({percent} PERCENT) "
+
+    def access_extreme_array_element(
+        self, name: str, first_or_last: Literal["first", "last"]
+    ) -> str:
+        if first_or_last == "first":
+            return f"{name}[{self.array_first_index}]"
+        if first_or_last == "last":
+            return f"element_at({name}, -1)"
+        raise ValueError(
+            f"Argument 'first_or_last' should be 'first' or 'last', "
+            f"received: '{first_or_last}'"
+        )
 
     def explode_arrays_sql(
         self,
@@ -493,6 +583,22 @@ class PostgresDialect(SplinkDialect):
     @property
     def infinity_expression(self):
         return "'infinity'"
+
+    @property
+    def array_first_index(self):
+        return 1
+
+    def access_extreme_array_element(
+        self, name: str, first_or_last: Literal["first", "last"]
+    ) -> str:
+        if first_or_last == "first":
+            return f"{name}[{self.array_first_index}]"
+        if first_or_last == "last":
+            return f"{name}[array_length({name}, 1)]"
+        raise ValueError(
+            f"Argument 'first_or_last' should be 'first' or 'last', "
+            f"received: '{first_or_last}'"
+        )
 
 
 class AthenaDialect(SplinkDialect):
