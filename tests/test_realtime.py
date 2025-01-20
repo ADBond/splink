@@ -441,7 +441,7 @@ def test_realtime_cache_different_settings_dict(test_helpers, dialect):
     res2 = res2.as_record_dict()[0]["match_weight"]
 
     assert res1 != pytest.approx(res2)
-
+    ...
     res1_again, dummy = compare_records(
         df1, df2, settings_1, db_api, use_sql_from_cache=True
     )
