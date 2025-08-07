@@ -118,6 +118,22 @@ class SplinkDataFrame(ABC):
         """
         raise NotImplementedError("as_record_dict not implemented for this linker")
 
+    def as_dataframe(self, backend, limit=None):
+        def unknown_backend_function(limit=None):
+            raise ValueError(f"Unknown backend: '{backend}'")
+        backend_methods = {
+            "pandas": self.as_pandas_dataframe,
+            "polars": self.as_polars_dataframe,
+            "duckdb": self.as_duckdbpyrelation,
+            "spark": self.as_spark_dataframe,
+        }
+        return backend_methods.get(backend, unknown_backend_function)(limit=limit)
+
+    def as_polars_dataframe(self, limit=None):
+        """TODO"""
+        import polars as pl
+        return pl.DataFrame(self.as_record_dict(limit=limit))
+
     def as_pandas_dataframe(self, limit=None):
         """Return the dataframe as a pandas dataframe.
 

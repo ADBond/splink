@@ -48,12 +48,11 @@ class DuckDBDataFrame(SplinkDataFrame):
         column_names = [desc[0] for desc in duckdb_table.description]
         return [dict(zip(column_names, row)) for row in rows]
 
-    def as_pandas_dataframe(self, limit: int = None) -> pd_DataFrame:
-        sql = f"select * from {self.physical_name}"
-        if limit:
-            sql += f" limit {limit}"
+    def as_polars_dataframe(self, limit=None):
+        return self.as_duckdbpyrelation(limit).pl()
 
-        return self.db_api._execute_sql_against_backend(sql).to_df()
+    def as_pandas_dataframe(self, limit: int = None) -> pd_DataFrame:
+        return self.as_duckdbpyrelation(limit).to_df()
 
     def as_duckdbpyrelation(self, limit: int = None) -> DuckDBPyRelation:
         sql = f"select * from {self.physical_name}"
