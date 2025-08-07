@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Optional
 
@@ -122,7 +123,7 @@ class SplinkDataFrame(ABC):
         def unknown_backend_function(limit=None):
             raise ValueError(f"Unknown backend: '{backend}'")
 
-        backend_methods = {
+        backend_methods: dict[str, Callable[[Optional[int]], Any]] = {
             "pandas": self.as_pandas_dataframe,
             "polars": self.as_polars_dataframe,
             "duckdb": self.as_duckdbpyrelation,
@@ -173,7 +174,7 @@ class SplinkDataFrame(ABC):
         )
 
     # Spark not guaranteed to be available so return type is not imported
-    def as_spark_dataframe(self) -> "SparkDataFrame":  # type: ignore # noqa: F821
+    def as_spark_dataframe(self, limit: Optional[int]) -> "SparkDataFrame":  # type: ignore # noqa: F821
         """Return the dataframe as a spark dataframe.  Only available when using the
         Spark backend.
 
