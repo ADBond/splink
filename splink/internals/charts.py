@@ -5,8 +5,6 @@ import math
 import os
 from typing import Any, Dict, Union
 
-import numpy as np
-import pandas as pd
 from altair import Chart, SchemaBase
 
 from splink.internals.misc import read_resource
@@ -96,9 +94,9 @@ def match_weights_chart(records, as_dict=False):
     chart["data"]["values"] = records
 
     bayes_factors = [
-        abs(l2bf) for r in records
-        if (l2bf := r["log2_bayes_factor"]) is not None and
-        not math.isinf(l2bf)
+        abs(l2bf)
+        for r in records
+        if (l2bf := r["log2_bayes_factor"]) is not None and not math.isinf(l2bf)
     ]
     max_value = math.ceil(max(bayes_factors))
 

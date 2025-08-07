@@ -391,8 +391,9 @@ def _cumulative_comparisons_to_be_scored_from_blocking_rules(
     """
     pipeline.enqueue_sql(sql, "__splink__df_count_cumulative_blocks")
 
+    backend = "pandas"
     result_df = nw.from_native(
-        db_api.sql_pipeline_to_splink_dataframe(pipeline).as_pandas_dataframe(),
+        db_api.sql_pipeline_to_splink_dataframe(pipeline).as_dataframe(backend=backend),
     )
 
     # The above table won't include rules that have no matches
@@ -402,16 +403,13 @@ def _cumulative_comparisons_to_be_scored_from_blocking_rules(
     }
     all_rules_df = nw.from_dict(
         all_rules,
-        backend="pandas",
+        backend=backend,
     )
 
     if result_df.shape[0] > 0:
-
-        complete_df = (
-            all_rules_df
-            .join(result_df, on="match_key", how="left")
-            .with_columns(row_count=nw.col("row_count").fill_null(0).cast(nw.Int64))
-        )
+        complete_df = all_rules_df.join(
+            result_df, on="match_key", how="left"
+        ).with_columns(row_count=nw.col("row_count").fill_null(0).cast(nw.Int64))
 
         complete_df = complete_df.with_columns(
             cumulative_rows=complete_df["row_count"].cum_sum().cast(nw.Int64),
@@ -420,7 +418,9 @@ def _cumulative_comparisons_to_be_scored_from_blocking_rules(
         complete_df = complete_df.with_columns(
             start=complete_df["cumulative_rows"] - complete_df["row_count"]
         )
-        complete_df = complete_df.with_columns(start=complete_df["start"].cast(nw.Int64))
+        complete_df = complete_df.with_columns(
+            start=complete_df["start"].cast(nw.Int64)
+        )
 
     else:
         complete_df = all_rules_df.with_columns(

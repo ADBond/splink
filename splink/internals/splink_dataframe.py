@@ -121,6 +121,7 @@ class SplinkDataFrame(ABC):
     def as_dataframe(self, backend, limit=None):
         def unknown_backend_function(limit=None):
             raise ValueError(f"Unknown backend: '{backend}'")
+
         backend_methods = {
             "pandas": self.as_pandas_dataframe,
             "polars": self.as_polars_dataframe,
@@ -132,6 +133,7 @@ class SplinkDataFrame(ABC):
     def as_polars_dataframe(self, limit=None):
         """TODO"""
         import polars as pl
+
         return pl.DataFrame(self.as_record_dict(limit=limit))
 
     def as_pandas_dataframe(self, limit=None):
