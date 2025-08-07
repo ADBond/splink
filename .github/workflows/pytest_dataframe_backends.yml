@@ -1,4 +1,4 @@
-name: Duckdb and core tests
+name: Dataframe backend tests
 on:
   pull_request:
     branches:
