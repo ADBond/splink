@@ -400,8 +400,9 @@ def _cumulative_comparisons_to_be_scored_from_blocking_rules(
         "match_key": [str(i) for i in range(len(blocking_rules))],
         "blocking_rule": [br.blocking_rule_sql for br in blocking_rules],
     }
-    all_rules_df = nw.from_native(
-        pd.DataFrame(all_rules)
+    all_rules_df = nw.from_dict(
+        all_rules,
+        backend="pandas",
     )
 
     if result_df.shape[0] > 0:
