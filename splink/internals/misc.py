@@ -7,9 +7,7 @@ import string
 from collections import namedtuple
 from datetime import datetime, timedelta
 from math import ceil, inf, log2
-from typing import Iterable, TypeVar, overload
-
-import numpy as np
+from typing import Any, Iterable, TypeVar, overload
 
 T = TypeVar("T")
 
@@ -69,6 +67,13 @@ def join_list_with_commas_final_and(lst: list[str]) -> str:
     return ", ".join(lst[:-1]) + " and " + lst[-1]
 
 
+def record_dict_to_records(record_dict: dict[str, list[Any]]) -> list[dict[str, Any]]:
+    cols = record_dict.keys()
+    return [
+        {c: v for c, v in zip(cols, values)} for values in zip(*record_dict.values())
+    ]
+
+
 class EverythingEncoder(json.JSONEncoder):
     """
     Used to correctly encode data when dumping it to json where we need to
@@ -85,6 +90,9 @@ class EverythingEncoder(json.JSONEncoder):
     # NOT natively serializable.  The 'encode' method can be used
     # for natively serializable data
     def default(self, obj):
+        # TODO: how to make this optional:
+        import numpy as np
+
         if isinstance(obj, np.integer):
             return int(obj)
         elif isinstance(obj, np.floating):

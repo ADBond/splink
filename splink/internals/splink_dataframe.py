@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Optional
 
@@ -118,6 +119,27 @@ class SplinkDataFrame(ABC):
         """
         raise NotImplementedError("as_record_dict not implemented for this linker")
 
+    def as_dataframe(self, backend=None, limit=None):
+        if backend is None:
+            backend = self.db_api.df_backend
+
+        def unknown_backend_function(limit=None):
+            raise ValueError(f"Unknown backend: '{backend}'")
+
+        backend_methods: dict[str, Callable[[Optional[int]], Any]] = {
+            "pandas": self.as_pandas_dataframe,
+            "polars": self.as_polars_dataframe,
+            "duckdb": self.as_duckdbpyrelation,
+            "spark": self.as_spark_dataframe,
+        }
+        return backend_methods.get(backend, unknown_backend_function)(limit=limit)
+
+    def as_polars_dataframe(self, limit=None):
+        """TODO"""
+        import polars as pl
+
+        return pl.DataFrame(self.as_record_dict(limit=limit))
+
     def as_pandas_dataframe(self, limit=None):
         """Return the dataframe as a pandas dataframe.
 
@@ -155,7 +177,7 @@ class SplinkDataFrame(ABC):
         )
 
     # Spark not guaranteed to be available so return type is not imported
-    def as_spark_dataframe(self) -> "SparkDataFrame":  # type: ignore # noqa: F821
+    def as_spark_dataframe(self, limit: Optional[int]) -> "SparkDataFrame":  # type: ignore # noqa: F821
         """Return the dataframe as a spark dataframe.  Only available when using the
         Spark backend.
 
