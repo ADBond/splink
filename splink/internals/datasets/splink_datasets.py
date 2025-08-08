@@ -23,6 +23,7 @@ def dataset_property(metadata_method):
 
     def lazyload_data(self):
         import pandas as pd
+
         if dataset_name in self._in_memory_data:
             return self._in_memory_data[dataset_name]
 

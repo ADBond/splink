@@ -149,9 +149,11 @@ def compute_proportions_for_new_parameters_pandas(
 
 
 def compute_proportions_for_new_parameters(
-    m_u_df: pd.DataFrame,
+    df_params: SplinkDataFrame,
 ) -> List[dict[str, Any]]:
     # Execute with duckdb if installed, otherwise default to pandas
+
+    m_u_df = df_params.as_pandas_dataframe()
     try:
         import duckdb
 
@@ -308,8 +310,7 @@ def expectation_maximisation(
         else:
             pipeline.append_input_dataframe(df_comparison_vector_values)
             df_params = db_api.sql_pipeline_to_splink_dataframe(pipeline)
-        param_records = df_params.as_pandas_dataframe()
-        param_records = compute_proportions_for_new_parameters(param_records)
+        param_records = compute_proportions_for_new_parameters(df_params)
 
         df_params.drop_table_from_database_and_remove_from_cache()
 

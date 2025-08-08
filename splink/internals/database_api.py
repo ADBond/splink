@@ -32,14 +32,11 @@ from .exceptions import SplinkException
 
 logger = logging.getLogger(__name__)
 
-BaseAcceptableInputTableType = Union[
-    str,
-    List[Dict[str, Any]],
-    Dict[str, Any]
-]
+BaseAcceptableInputTableType = Union[str, List[Dict[str, Any]], Dict[str, Any]]
 
 if TYPE_CHECKING:
     from pandas import DataFrame as PandasDataFrame
+
     AcceptableInputTableType = Union[BaseAcceptableInputTableType, PandasDataFrame]
 else:
     AcceptableInputTableType = BaseAcceptableInputTableType
