@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Any, Callable, List, Optional, cast
+from typing import Any, Callable, List, cast
 
 import narwhals as nw
 import pandas as pd
@@ -165,11 +165,12 @@ def compute_proportions_for_new_parameters(
 
         # TODO: where should this live ultimately?
         backend = df_params.db_api.df_backend
+
         def unknown_backend_function():
             raise ValueError(f"Unknown backend: '{backend}'")
 
         # TODO: maybe just from duckdb to dict, rather than via a backend?
-        backend_methods: dict[str, Callable[[Optional[int]], Any]] = {
+        backend_methods: dict[str, Callable[[], Any]] = {
             "pandas": ddb_relation.to_df,
             "polars": ddb_relation.pl,
         }
