@@ -119,7 +119,10 @@ class SplinkDataFrame(ABC):
         """
         raise NotImplementedError("as_record_dict not implemented for this linker")
 
-    def as_dataframe(self, backend, limit=None):
+    def as_dataframe(self, backend=None, limit=None):
+        if backend is None:
+            backend = self.db_api.df_backend
+
         def unknown_backend_function(limit=None):
             raise ValueError(f"Unknown backend: '{backend}'")
 

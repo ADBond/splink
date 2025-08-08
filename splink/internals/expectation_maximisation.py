@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Any, List, cast
+from typing import Any, Callable, List, Optional, cast
 
+import narwhals as nw
 import pandas as pd
 
 from splink.internals.comparison import Comparison
@@ -11,6 +12,7 @@ from splink.internals.comparison_level import ComparisonLevel
 from splink.internals.constants import LEVEL_NOT_OBSERVED_TEXT
 from splink.internals.input_column import InputColumn
 from splink.internals.m_u_records_to_parameters import m_u_records_to_lookup_dict
+from splink.internals.misc import record_dict_to_records
 from splink.internals.pipeline import CTEPipeline
 from splink.internals.predict import (
     predict_from_agreement_pattern_counts_sqls,
@@ -153,13 +155,30 @@ def compute_proportions_for_new_parameters(
 ) -> List[dict[str, Any]]:
     # Execute with duckdb if installed, otherwise default to pandas
 
-    m_u_df = df_params.as_pandas_dataframe()
     try:
         import duckdb
 
+        m_u_df = df_params.as_dataframe()
         sql = compute_proportions_for_new_parameters_sql("m_u_df")
-        return duckdb.query(sql).to_df().to_dict("records")
+
+        ddb_relation = duckdb.query(sql)
+
+        # TODO: where should this live ultimately?
+        backend = df_params.db_api.df_backend
+        def unknown_backend_function(limit=None):
+            raise ValueError(f"Unknown backend: '{backend}'")
+
+        backend_methods: dict[str, Callable[[Optional[int]], Any]] = {
+            "pandas": ddb_relation.to_df,
+            "polars": ddb_relation.pl,
+        }
+        return record_dict_to_records(
+            nw.from_native(
+                backend_methods.get(backend, unknown_backend_function)()
+            ).to_dict(as_series=False)
+        )
     except (ImportError, ModuleNotFoundError):
+        m_u_df = df_params.as_pandas_dataframe()
         return compute_proportions_for_new_parameters_pandas(m_u_df)
 
 
