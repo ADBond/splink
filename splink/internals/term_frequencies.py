@@ -7,7 +7,6 @@ import warnings
 from typing import TYPE_CHECKING, Any, Optional
 
 from numpy import arange, ceil, floor, log2
-from pandas import concat, cut
 
 from splink.internals.charts import (
     ChartReturnType,
@@ -239,6 +238,8 @@ def tf_adjustment_chart(
     vals_to_include: list[str],
     as_dict: bool,
 ) -> ChartReturnType:
+
+    from pandas import concat, cut
     # Data for chart
     comparison = linker._settings_obj._get_comparison_by_output_column_name(col)
     comparison_records = comparison._as_detailed_records
