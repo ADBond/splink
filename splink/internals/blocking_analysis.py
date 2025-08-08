@@ -5,7 +5,6 @@ import math
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple, Union
 
 import narwhals as nw
-import pandas as pd
 import sqlglot
 
 from splink.internals.blocking import (
@@ -24,7 +23,11 @@ from splink.internals.charts import (
 )
 from splink.internals.database_api import AcceptableInputTableType, DatabaseAPISubClass
 from splink.internals.input_column import InputColumn
-from splink.internals.misc import calculate_cartesian, ensure_is_iterable
+from splink.internals.misc import (
+    calculate_cartesian,
+    ensure_is_iterable,
+    record_dict_to_records,
+)
 from splink.internals.pipeline import CTEPipeline
 from splink.internals.splink_dataframe import SplinkDataFrame
 from splink.internals.vertically_concatenate import (
@@ -289,7 +292,7 @@ def _cumulative_comparisons_to_be_scored_from_blocking_rules(
     max_rows_limit: int = int(1e9),
     unique_id_input_column: InputColumn,
     source_dataset_input_column: Optional[InputColumn],
-) -> pd.DataFrame:
+) -> nw.DataFrame[Any]:
     # Check none of the blocking rules will create a vast/computationally
     # intractable number of comparisons
     for br in blocking_rules:
@@ -391,7 +394,7 @@ def _cumulative_comparisons_to_be_scored_from_blocking_rules(
     """
     pipeline.enqueue_sql(sql, "__splink__df_count_cumulative_blocks")
 
-    backend = "pandas"
+    backend = db_api.df_backend
     result_df = nw.from_native(
         db_api.sql_pipeline_to_splink_dataframe(pipeline).as_dataframe(backend=backend),
     )
@@ -442,7 +445,7 @@ def _cumulative_comparisons_to_be_scored_from_blocking_rules(
     ]
     complete_df = complete_df[col_order]
 
-    return complete_df.to_native()
+    return complete_df
 
 
 def _count_comparisons_generated_from_blocking_rule(
@@ -627,7 +630,7 @@ def cumulative_comparisons_to_be_scored_from_blocking_rules_data(
     unique_id_column_name: str = "unique_id",
     max_rows_limit: int = int(1e9),
     source_dataset_column_name: Optional[str] = None,
-) -> pd.DataFrame:
+) -> nw.DataFrame[Any]:
     """TODO: Add docstring here"""
     splink_df_dict = db_api.register_multiple_tables(table_or_tables)
 
@@ -695,7 +698,7 @@ def cumulative_comparisons_to_be_scored_from_blocking_rules_chart(
         db_api.sql_dialect.sql_dialect_str,
     )
 
-    pd_df = _cumulative_comparisons_to_be_scored_from_blocking_rules(
+    nw_df = _cumulative_comparisons_to_be_scored_from_blocking_rules(
         splink_df_dict=splink_df_dict,
         blocking_rules=blocking_rules_as_br,
         link_type=link_type,
@@ -706,7 +709,7 @@ def cumulative_comparisons_to_be_scored_from_blocking_rules_chart(
     )
 
     return cumulative_blocking_rule_comparisons_generated(
-        pd_df.to_dict(orient="records")
+        record_dict_to_records(nw_df.to_dict(as_series=False))
     )
 
 

@@ -7,7 +7,7 @@ import string
 from collections import namedtuple
 from datetime import datetime, timedelta
 from math import ceil, inf, log2
-from typing import Iterable, TypeVar, overload
+from typing import Any, Iterable, TypeVar, overload
 
 T = TypeVar("T")
 
@@ -65,6 +65,13 @@ def join_list_with_commas_final_and(lst: list[str]) -> str:
     if len(lst) == 1:
         return lst[0]
     return ", ".join(lst[:-1]) + " and " + lst[-1]
+
+
+def record_dict_to_records(record_dict: dict[str, list[Any]]) -> list[dict[str, Any]]:
+    cols = record_dict.keys()
+    return [
+        {c: v for c, v in zip(cols, values)} for values in zip(*record_dict.values())
+    ]
 
 
 class EverythingEncoder(json.JSONEncoder):

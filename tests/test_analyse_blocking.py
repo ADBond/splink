@@ -11,6 +11,7 @@ from splink.blocking_analysis import (
 from splink.internals.blocking import BlockingRule
 from splink.internals.blocking_rule_library import CustomRule, Or, block_on
 from splink.internals.duckdb.database_api import DuckDBAPI
+from splink.internals.misc import record_dict_to_records
 
 from .decorator import mark_with_dialects_excluding, mark_with_dialects_including
 
@@ -115,9 +116,11 @@ def test_analyse_blocking_slow_methodology(test_helpers, dialect):
 
 
 def validate_blocking_output(comparison_count_args, expected_out):
-    records = cumulative_comparisons_to_be_scored_from_blocking_rules_data(
-        **comparison_count_args
-    ).to_dict(orient="records")
+    records = record_dict_to_records(
+        cumulative_comparisons_to_be_scored_from_blocking_rules_data(
+            **comparison_count_args
+        ).to_dict(as_series=False)
+    )
 
     assert expected_out["row_count"] == list(map(lambda x: x["row_count"], records))
 
@@ -172,7 +175,9 @@ def test_source_dataset_works_as_expected(test_helpers, dialect):
         link_type="link_only",
         source_dataset_column_name="source_dataset",
     )
-    assert r1.to_dict(orient="records") == r2.to_dict(orient="records")
+    assert record_dict_to_records(
+        r1.to_dict(as_series=False)
+    ) == record_dict_to_records(r2.to_dict(as_series=False))
 
     df = pd.read_csv("./tests/datasets/fake_1000_from_splink_demos.csv")
     df_1 = df[df["unique_id"] % 3 == 0].copy()
