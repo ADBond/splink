@@ -164,27 +164,17 @@ def compute_proportions_for_new_parameters(
     try:
         import duckdb
 
-        m_u_df = df_params.as_dataframe()
+        m_u_df = df_params.as_dataframe("duckdb")
         sql = compute_proportions_for_new_parameters_sql("m_u_df")
 
-        ddb_relation = duckdb.query(sql)
+        # TODO: super brittle, just PoC:
+        con = getattr(df_params.db_api, "_con", duckdb)
 
-        # TODO: where should this live ultimately?
-        backend = df_params.db_api.df_backend
-
-        def unknown_backend_function():
-            raise ValueError(f"Unknown backend: '{backend}'")
-
-        # TODO: maybe just from duckdb to dict, rather than via a backend?
-        backend_methods: dict[str, Callable[[], Any]] = {
-            "pandas": ddb_relation.to_df,
-            "polars": ddb_relation.pl,
-        }
-        return record_dict_to_records(
-            nw.from_native(
-                backend_methods.get(backend, unknown_backend_function)()
-            ).to_dict(as_series=False)
-        )
+        ddb_relation = con.query(sql)
+        # TODO: borrowed from DuckDBDataFrame.as_record_dict - reusable?
+        rows = ddb_relation.fetchall()
+        column_names = [desc[0] for desc in ddb_relation.description]
+        return [dict(zip(column_names, row)) for row in rows]
     except (ImportError, ModuleNotFoundError):
         m_u_df = df_params.as_pandas_dataframe()
         return compute_proportions_for_new_parameters_pandas(m_u_df)
