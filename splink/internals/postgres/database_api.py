@@ -2,7 +2,6 @@ import logging
 from typing import Any, List, Union
 
 import duckdb
-import pandas as pd
 from sqlalchemy import CursorResult, text
 from sqlalchemy.engine import Engine
 
@@ -43,8 +42,10 @@ class PostgresAPI(DatabaseAPI[CursorResult[Any]]):
 
     def _table_registration(self, input, table_name):
         if isinstance(input, dict):
+            import pandas as pd
             input = pd.DataFrame(input)
         elif isinstance(input, list):
+            import pandas as pd
             input = pd.DataFrame.from_records(input)
 
         # Using Duckdb to insert the data ensures the correct datatypes

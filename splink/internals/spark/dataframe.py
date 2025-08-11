@@ -3,8 +3,6 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
-from pandas import DataFrame as PandasDataFrame
-
 from splink.internals.input_column import InputColumn
 from splink.internals.splink_dataframe import SplinkDataFrame
 
@@ -14,7 +12,11 @@ logger = logging.getLogger(__name__)
 
 Dialect["customspark"]
 if TYPE_CHECKING:
+    from pandas import DataFrame as PandasDataFrame
+
     from .database_api import SparkAPI
+else:
+    PandasDataFrame = ...
 
 
 class SparkDataFrame(SplinkDataFrame):

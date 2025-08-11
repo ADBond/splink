@@ -2,7 +2,6 @@ import sqlite3
 from abc import ABC, abstractmethod
 from collections import UserDict
 
-import pandas as pd
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.types import INTEGER, TEXT
 
@@ -39,9 +38,11 @@ class TestHelper(ABC):
         pass
 
     def load_frame_from_csv(self, path):
+        import pandas as pd
         return pd.read_csv(path)
 
     def load_frame_from_parquet(self, path):
+        import pandas as pd
         return pd.read_parquet(path)
 
     @property
