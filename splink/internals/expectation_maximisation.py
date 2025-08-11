@@ -2,10 +2,9 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Any, Callable, List, cast
+from typing import TYPE_CHECKING, Any, Callable, List, cast
 
 import narwhals as nw
-import pandas as pd
 
 from splink.internals.comparison import Comparison
 from splink.internals.comparison_level import ComparisonLevel
@@ -22,6 +21,11 @@ from splink.internals.settings import CoreModelSettings, TrainingSettings
 from splink.internals.splink_dataframe import SplinkDataFrame
 
 from .database_api import DatabaseAPISubClass
+
+if TYPE_CHECKING:
+    from pandas import DataFrame as pd_DataFrame
+else:
+    pd_DataFrame = ...
 
 logger = logging.getLogger(__name__)
 
@@ -120,8 +124,10 @@ def compute_proportions_for_new_parameters_sql(table_name):
 
 
 def compute_proportions_for_new_parameters_pandas(
-    m_u_df: pd.DataFrame,
+    m_u_df: pd_DataFrame,
 ) -> List[dict[str, Any]]:
+    import pandas as pd
+
     data = m_u_df.copy()
     m_prob = "m_probability"
     u_prob = "u_probability"
