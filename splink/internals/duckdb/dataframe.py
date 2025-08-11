@@ -27,9 +27,9 @@ class DuckDBDataFrame(SplinkDataFrame):
             f"SELECT column_name FROM information_schema.columns "
             f"WHERE table_name = '{self.physical_name}'"
         )
-        col_strings = (self.db_api._execute_sql_against_backend(sql).to_df().to_dict())[
-            "column_name"
-        ].values()
+        col_strings = [
+            row[0] for row in self.db_api._execute_sql_against_backend(sql).fetchall()
+        ]
 
         return [InputColumn(c, sqlglot_dialect_str="duckdb") for c in col_strings]
 
