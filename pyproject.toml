@@ -30,6 +30,12 @@ pandas = [
      { version = ">=2.2.3", python = ">=3.13", optional=true }
 ]
 polars = {version=">=1.0.0", optional=true}
+# python 3.13 needs at least pyarrow 18.0.0
+pyarrow = [
+    { version = ">=7.0.0", python = "<3.13", optional=true },
+    { version = ">=18.0.0", python = ">=3.13", optional=true }
+]
+
 # need to manually specify numpy versions suitable for CI
 # 1.24.4 works with python 3.8, but not 3.12
 numpy = [
@@ -56,6 +62,11 @@ psycopg2-binary = ">=2.8.0"
 # but we get it as default for a smooth dev experience
 [tool.poetry.group.dataframes]
 [tool.poetry.group.dataframes.dependencies]
+numpy = [
+    # version is minimum valid with above listed pandas version
+    {version=">=1.17.3", python = "<3.12", optional=true },
+    {version=">=1.26.0", python = ">=3.12", optional=true},
+]
 pandas = [
      { version = ">1.3.5", python = "<3.13" },
      { version = ">=2.2.3", python = ">=3.13" }
@@ -87,8 +98,10 @@ pyspark = ["pyspark"]
 spark = ["pyspark"]
 athena = ["awswrangler"]
 postgres = ["sqlalchemy", "psycopg2-binary"]
+numpy = ["numpy"]
 pandas = ["pandas"]
 polars = ["polars"]
+pyarrow = ["pyarrow"]
 
 [build-system]
 requires = ["poetry-core>=1.0.8"]
@@ -134,6 +147,8 @@ markers = [
     "sqlite_only",
     "postgres",
     "postgres_only",
+# dataframe backends
+    "no_df_backend",
 ]
 
 [tool.mypy]
