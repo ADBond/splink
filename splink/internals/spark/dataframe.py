@@ -4,6 +4,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from splink.internals.input_column import InputColumn
+from splink.internals.misc import record_dict_to_records
 from splink.internals.splink_dataframe import SplinkDataFrame
 
 from .spark_helpers.custom_spark_dialect import Dialect
@@ -38,7 +39,11 @@ class SparkDataFrame(SplinkDataFrame):
         if limit:
             sql += f" limit {limit}"
 
-        return self.as_pandas_dataframe(limit=limit).to_dict(orient="records")
+        spark_df = self.db_api._execute_sql_against_backend(sql)
+        cols = spark_df.columns
+        rows = spark_df.toLocalIterator()
+
+        return [{col: value for col, value in zip(cols, row)} for row in rows]
 
     def _drop_table_from_database(self, force_non_splink_table=False):
         if self.db_api.break_lineage_method == "delta_lake_table":

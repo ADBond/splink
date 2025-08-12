@@ -62,15 +62,19 @@ class SparkAPI(DatabaseAPI[spark_df]):
     def _table_registration(
         self, input: AcceptableInputTableType, table_name: str
     ) -> None:
-        import pandas as pd
-        if isinstance(input, dict):
-            input = pd.DataFrame(input)
-        elif isinstance(input, list):
+        if isinstance(input, list):
             input = self.spark.createDataFrame(input)
+        elif isinstance(input, spark_df):
+            pass
+        else:
+            # pandas or dict
+            import pandas as pd
+            if isinstance(input, dict):
+                input = pd.DataFrame(input)
 
-        if isinstance(input, pd.DataFrame):
-            input = self._clean_pandas_df(input)
-            input = self.spark.createDataFrame(input)
+            if isinstance(input, pd.DataFrame):
+                input = self._clean_pandas_df(input)
+                input = self.spark.createDataFrame(input)
 
         input.createOrReplaceTempView(table_name)
 
