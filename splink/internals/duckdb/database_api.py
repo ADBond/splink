@@ -71,6 +71,7 @@ class DuckDBAPI(DatabaseAPI[duckdb.DuckDBPyRelation]):
     ) -> None:
         if isinstance(input, dict):
             import pandas as pd
+
             input = pd.DataFrame(input)
         elif isinstance(input, list):
             try:
@@ -106,6 +107,7 @@ class DuckDBAPI(DatabaseAPI[duckdb.DuckDBPyRelation]):
         accepted_df_dtypes = []
         try:
             import pandas as pd
+
             accepted_df_dtypes = [pd.DataFrame]
         except ImportError:
             pass

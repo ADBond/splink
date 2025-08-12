@@ -145,8 +145,6 @@ class SplinkDataFrame(ABC):
         """TODO"""
         import pyarrow as pa
 
-        print(self.as_record_dict(limit=limit))
-
         return pa.Table.from_pylist(self.as_record_dict(limit=limit))
 
     def as_pandas_dataframe(self, limit=None):
@@ -181,9 +179,7 @@ class SplinkDataFrame(ABC):
         Returns:
             duckdb.DuckDBPyRelation: A DuckDBPyRelation object
         """
-        raise NotImplementedError(
-            "This method is not available for this backend"
-        )
+        raise NotImplementedError("This method is not available for this backend")
 
     # Spark not guaranteed to be available so return type is not imported
     def as_spark_dataframe(self, limit: Optional[int]) -> "SparkDataFrame":  # type: ignore # noqa: F821

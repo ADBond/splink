@@ -4,7 +4,6 @@ import logging
 from typing import TYPE_CHECKING
 
 from splink.internals.input_column import InputColumn
-from splink.internals.misc import record_dict_to_records
 from splink.internals.splink_dataframe import SplinkDataFrame
 
 from .spark_helpers.custom_spark_dialect import Dialect

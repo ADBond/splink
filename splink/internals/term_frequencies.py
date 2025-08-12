@@ -192,6 +192,7 @@ def compute_all_term_frequencies_sqls(
 
 def comparison_level_to_tf_chart_data(cl: dict[str, Any]) -> dict[str, Any]:
     from numpy import log2
+
     df = cl["df_tf"]
     df.columns = ["value", "tf"]
     df = df[df.value.notnull()]

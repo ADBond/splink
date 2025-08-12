@@ -69,6 +69,7 @@ class SparkAPI(DatabaseAPI[spark_df]):
         else:
             # pandas or dict
             import pandas as pd
+
             if isinstance(input, dict):
                 input = pd.DataFrame(input)
 
@@ -132,11 +133,13 @@ class SparkAPI(DatabaseAPI[spark_df]):
     @property
     def accepted_df_dtypes(self):
         import pandas as pd
+
         return [pd.DataFrame, spark_df]
 
     def _clean_pandas_df(self, df):
         import pandas as pd
         from numpy import nan
+
         return df.fillna(nan).replace([nan, pd.NA], [None, None])
 
     def _set_splink_datastore(self, catalog, database):
