@@ -43,7 +43,7 @@ jobs:
       - name: Run tests
         run: |
           if [ "${{ matrix.dataframe-backend }}" != "no_df_backend" ]; then
-            poetry run pytest -v --durations=0 -m "all" tests/
+            poetry run pytest -v --durations=0 -m "all" tests/test_df_backends.py
           else
-            poetry run pytest -v --durations=0 -m "all and no_df_backend"  tests/
+            poetry run pytest -v --durations=0 -m "all and no_df_backend"  tests/test_df_backends.py
           fi
