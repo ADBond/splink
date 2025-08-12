@@ -17,7 +17,7 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
-        dataframe-backend: ["pandas", "polars"]
+        dataframe-backend: ["pandas", "polars", "pyarrow", "no_df_backend"]
     name: Run tests with Python ${{ matrix.python-version }}
     steps:
       - uses: actions/checkout@v4
@@ -32,11 +32,18 @@ jobs:
 
       - name: Install dependencies
         run: |
-          poetry config virtualenvs.in-project true
-          poetry install --no-interaction --no-root --extras ${{ matrix.dataframe-backend }}
+          if [ "${{ matrix.dataframe-backend }}" != "no_df_backend" ]; then
+            poetry install --no-interaction --no-root --without=dataframes --extras "${{ matrix.dataframe-backend }}"
+          else
+            poetry install --no-interaction --no-root --without=dataframes
+          fi
           # check installed library versions
           poetry run python -m pip freeze
 
-      - name: Run tests with coverage
+      - name: Run tests
         run: |
-          poetry run pytest -v --durations=0 -m "duckdb" tests/
+          if [ "${{ matrix.dataframe-backend }}" != "no_df_backend" ]; then
+            poetry run pytest -v --durations=0 -m "all" tests/
+          else
+            poetry run pytest -v --durations=0 -m "all and no_df_backend"  tests/
+          fi
