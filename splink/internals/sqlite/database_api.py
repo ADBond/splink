@@ -2,8 +2,6 @@ import math
 import sqlite3
 from typing import Union
 
-import pandas as pd
-
 from splink.internals.database_api import DatabaseAPI
 from splink.internals.dialects import (
     SQLiteDialect,
@@ -78,8 +76,10 @@ class SQLiteAPI(DatabaseAPI[sqlite3.Cursor]):
 
     def _table_registration(self, input, table_name):
         if isinstance(input, dict):
+            import pandas as pd
             input = pd.DataFrame(input)
         elif isinstance(input, list):
+            import pandas as pd
             input = pd.DataFrame.from_records(input)
 
         # Will error if an invalid data type is passed

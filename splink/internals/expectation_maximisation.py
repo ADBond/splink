@@ -2,10 +2,9 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Any, Callable, List, cast
+from typing import TYPE_CHECKING, Any, Callable, List, cast
 
 import narwhals as nw
-import pandas as pd
 
 from splink.internals.comparison import Comparison
 from splink.internals.comparison_level import ComparisonLevel
@@ -22,6 +21,11 @@ from splink.internals.settings import CoreModelSettings, TrainingSettings
 from splink.internals.splink_dataframe import SplinkDataFrame
 
 from .database_api import DatabaseAPISubClass
+
+if TYPE_CHECKING:
+    from pandas import DataFrame as pd_DataFrame
+else:
+    pd_DataFrame = ...
 
 logger = logging.getLogger(__name__)
 
@@ -120,8 +124,10 @@ def compute_proportions_for_new_parameters_sql(table_name):
 
 
 def compute_proportions_for_new_parameters_pandas(
-    m_u_df: pd.DataFrame,
+    m_u_df: pd_DataFrame,
 ) -> List[dict[str, Any]]:
+    import pandas as pd
+
     data = m_u_df.copy()
     m_prob = "m_probability"
     u_prob = "u_probability"
@@ -158,27 +164,21 @@ def compute_proportions_for_new_parameters(
     try:
         import duckdb
 
+        # convert to dataframe, using chosen backend
+        # convert from that backend to duckdb
+        # that is all
         m_u_df = df_params.as_dataframe()
+
         sql = compute_proportions_for_new_parameters_sql("m_u_df")
 
-        ddb_relation = duckdb.query(sql)
+        # TODO: super brittle, just PoC:
+        con = getattr(df_params.db_api, "_con", duckdb)
 
-        # TODO: where should this live ultimately?
-        backend = df_params.db_api.df_backend
-
-        def unknown_backend_function():
-            raise ValueError(f"Unknown backend: '{backend}'")
-
-        # TODO: maybe just from duckdb to dict, rather than via a backend?
-        backend_methods: dict[str, Callable[[], Any]] = {
-            "pandas": ddb_relation.to_df,
-            "polars": ddb_relation.pl,
-        }
-        return record_dict_to_records(
-            nw.from_native(
-                backend_methods.get(backend, unknown_backend_function)()
-            ).to_dict(as_series=False)
-        )
+        ddb_relation = con.query(sql)
+        # TODO: borrowed from DuckDBDataFrame.as_record_dict - reusable?
+        rows = ddb_relation.fetchall()
+        column_names = [desc[0] for desc in ddb_relation.description]
+        return [dict(zip(column_names, row)) for row in rows]
     except (ImportError, ModuleNotFoundError):
         m_u_df = df_params.as_pandas_dataframe()
         return compute_proportions_for_new_parameters_pandas(m_u_df)

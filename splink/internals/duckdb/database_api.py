@@ -4,7 +4,6 @@ import logging
 from typing import Union
 
 import duckdb
-import pandas as pd
 
 from splink.internals.database_api import AcceptableInputTableType, DatabaseAPI
 from splink.internals.dialects import (
@@ -71,6 +70,7 @@ class DuckDBAPI(DatabaseAPI[duckdb.DuckDBPyRelation]):
         self, input: AcceptableInputTableType, table_name: str
     ) -> None:
         if isinstance(input, dict):
+            import pandas as pd
             input = pd.DataFrame(input)
         elif isinstance(input, list):
             try:
@@ -103,7 +103,12 @@ class DuckDBAPI(DatabaseAPI[duckdb.DuckDBPyRelation]):
 
     @property
     def accepted_df_dtypes(self):
-        accepted_df_dtypes = [pd.DataFrame]
+        accepted_df_dtypes = []
+        try:
+            import pandas as pd
+            accepted_df_dtypes = [pd.DataFrame]
+        except ImportError:
+            pass
         try:
             # If pyarrow is installed, add to the accepted list
             import pyarrow as pa

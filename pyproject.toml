@@ -20,34 +20,35 @@ altair = [
     {version = ">=5.5.0", python = ">=3.13"},
 ]
 Jinja2 = ">=3.0.3"
-
-# need to manually specify numpy versions suitable for CI
-# 1.24.4 works with python 3.8, but not 3.12
-numpy = [
-    # version is minimum valid with above listed pandas version
-    {version=">=1.17.3", python = "<3.12"},
-    {version=">=1.26.0", python = ">=3.12"},
-]
-
+# for graph metrics
+igraph = ">=0.11.2"
 
 # Optional installs
-# python >=3.12 requires pyspark >=4.0.0 - currently unreleased
-pyspark = {version=">=3.2.1", optional=true}
-
 # 1.3.5 is the last version supporting py 3.7.1
 pandas = [
      { version = ">1.3.5", python = "<3.13", optional=true },
      { version = ">=2.2.3", python = ">=3.13", optional=true }
 ]
 polars = {version=">=1.0.0", optional=true}
+# python 3.13 needs at least pyarrow 18.0.0
+pyarrow = [
+    { version = ">=7.0.0", python = "<3.13", optional=true },
+    { version = ">=18.0.0", python = ">=3.13", optional=true }
+]
+
+# need to manually specify numpy versions suitable for CI
+# 1.24.4 works with python 3.8, but not 3.12
+numpy = [
+    # version is minimum valid with above listed pandas version
+    {version=">=1.17.3", python = "<3.12", optional=true },
+    {version=">=1.26.0", python = ">=3.12", optional=true},
+]
+# python >=3.12 requires pyspark >=4.0.0 - not yet fully compatible
+pyspark = {version=">=3.2.1", optional=true}
 awswrangler = [
     {version=">=3.0.0,<4.0.0", python = ">=3.8", optional=true}
 ]
-
 psycopg2-binary = {version=">=2.8.0", optional=true}
-
-# for graph metrics
-igraph = ">=0.11.2"
 
 [tool.poetry.group.dev]
 [tool.poetry.group.dev.dependencies]
@@ -56,13 +57,24 @@ pyspark = ">=3.2.1"
 sqlalchemy = ">=1.4.0"
 # temporarily use binary version, to avoid issues with pg_config path
 psycopg2-binary = ">=2.8.0"
-igraph = ">=0.11.2"
-# 2.2.2 is first version that supports numpy >= 2.0.0
-# if we don't constrain this, we can end up with numpy >= 2.0.0 and pandas < 2.2.2
-# particularly in pythons 3.10 and 3.11
+
+# specify dev df backends as a separate group, so we can install without it
+# but we get it as default for a smooth dev experience
+[tool.poetry.group.dataframes]
+[tool.poetry.group.dataframes.dependencies]
+numpy = [
+    # version is minimum valid with above listed pandas version
+    {version=">=1.17.3", python = "<3.12", optional=true },
+    {version=">=1.26.0", python = ">=3.12", optional=true},
+]
 pandas = [
-   {version= ">1.3.5", python = ">=3.8"},
-   {version=">=2.2.2", python = ">=3.10"},
+     { version = ">1.3.5", python = "<3.13" },
+     { version = ">=2.2.3", python = ">=3.13" }
+]
+# python 3.13 needs at least pyarrow 18.0.0
+pyarrow = [
+    { version = ">=7.0.0", python = "<3.13" },
+    { version = ">=18.0.0", python = ">=3.13" }
 ]
 
 [tool.poetry.group.linting]
@@ -73,26 +85,23 @@ ruff = "^0.4.2"
 [tool.poetry.group.testing.dependencies]
 # pin to reduce dependencies
 pytest = ">=7.3"
-# python 3.13 needs at least pyarrow 18.0.0
-pyarrow = [
-    { version = ">=7.0.0", python = "<3.13" },
-    { version = ">=18.0.0", python = ">=3.13" }
-]
 networkx = ">=2.5.1"
 rapidfuzz = ">=2.0.3"
 
 [tool.poetry.group.typechecking]
-optional = true
 [tool.poetry.group.typechecking.dependencies]
 mypy = "1.9.0"
 
+# runtime extras installs:
 [tool.poetry.extras]
 pyspark = ["pyspark"]
 spark = ["pyspark"]
 athena = ["awswrangler"]
 postgres = ["sqlalchemy", "psycopg2-binary"]
+numpy = ["numpy"]
 pandas = ["pandas"]
 polars = ["polars"]
+pyarrow = ["pyarrow"]
 
 [build-system]
 requires = ["poetry-core>=1.0.8"]
@@ -138,6 +147,8 @@ markers = [
     "sqlite_only",
     "postgres",
     "postgres_only",
+# dataframe backends
+    "no_df_backend",
 ]
 
 [tool.mypy]

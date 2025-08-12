@@ -129,6 +129,7 @@ class SplinkDataFrame(ABC):
         backend_methods: dict[str, Callable[[Optional[int]], Any]] = {
             "pandas": self.as_pandas_dataframe,
             "polars": self.as_polars_dataframe,
+            "pyarrow": self.as_pyarrow_dataframe,
             "duckdb": self.as_duckdbpyrelation,
             "spark": self.as_spark_dataframe,
         }
@@ -139,6 +140,14 @@ class SplinkDataFrame(ABC):
         import polars as pl
 
         return pl.DataFrame(self.as_record_dict(limit=limit))
+
+    def as_pyarrow_dataframe(self, limit=None):
+        """TODO"""
+        import pyarrow as pa
+
+        print(self.as_record_dict(limit=limit))
+
+        return pa.Table.from_pylist(self.as_record_dict(limit=limit))
 
     def as_pandas_dataframe(self, limit=None):
         """Return the dataframe as a pandas dataframe.
@@ -173,7 +182,7 @@ class SplinkDataFrame(ABC):
             duckdb.DuckDBPyRelation: A DuckDBPyRelation object
         """
         raise NotImplementedError(
-            "This method is only available when using the DuckDB backend"
+            "This method is not available for this backend"
         )
 
     # Spark not guaranteed to be available so return type is not imported

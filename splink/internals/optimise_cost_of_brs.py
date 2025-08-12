@@ -4,8 +4,6 @@ import logging
 from random import randint
 from typing import TypeVar
 
-import pandas as pd
-
 from splink.internals.cost_of_blocking_rules import calculate_cost_of_combination_of_brs
 
 logger = logging.getLogger(__name__)
@@ -153,6 +151,8 @@ def suggest_blocking_rules(
     """
     if len(df_block_stats) == 0:
         return None
+
+    import pandas as pd
 
     max_comparison_count = df_block_stats["comparison_count"].max()
 

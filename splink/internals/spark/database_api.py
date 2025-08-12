@@ -3,9 +3,7 @@ import math
 import os
 import re
 
-import pandas as pd
 import sqlglot
-from numpy import nan
 from pyspark.sql.dataframe import DataFrame as spark_df
 from pyspark.sql.utils import AnalysisException
 
@@ -64,14 +62,19 @@ class SparkAPI(DatabaseAPI[spark_df]):
     def _table_registration(
         self, input: AcceptableInputTableType, table_name: str
     ) -> None:
-        if isinstance(input, dict):
-            input = pd.DataFrame(input)
-        elif isinstance(input, list):
+        if isinstance(input, list):
             input = self.spark.createDataFrame(input)
+        elif isinstance(input, spark_df):
+            pass
+        else:
+            # pandas or dict
+            import pandas as pd
+            if isinstance(input, dict):
+                input = pd.DataFrame(input)
 
-        if isinstance(input, pd.DataFrame):
-            input = self._clean_pandas_df(input)
-            input = self.spark.createDataFrame(input)
+            if isinstance(input, pd.DataFrame):
+                input = self._clean_pandas_df(input)
+                input = self.spark.createDataFrame(input)
 
         input.createOrReplaceTempView(table_name)
 
@@ -128,9 +131,12 @@ class SparkAPI(DatabaseAPI[spark_df]):
 
     @property
     def accepted_df_dtypes(self):
+        import pandas as pd
         return [pd.DataFrame, spark_df]
 
     def _clean_pandas_df(self, df):
+        import pandas as pd
+        from numpy import nan
         return df.fillna(nan).replace([nan, pd.NA], [None, None])
 
     def _set_splink_datastore(self, catalog, database):
