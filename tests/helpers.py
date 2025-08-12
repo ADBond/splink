@@ -40,10 +40,12 @@ class TestHelper(ABC):
 
     def load_frame_from_csv(self, path):
         import pandas as pd
+
         return pd.read_csv(path)
 
     def load_frame_from_parquet(self, path):
         import pandas as pd
+
         return pd.read_parquet(path)
 
     @property

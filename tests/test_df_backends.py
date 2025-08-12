@@ -19,4 +19,3 @@ def test_run_with_no_df_backend(dialect, test_helpers):
     linker.clustering.cluster_pairwise_predictions_at_threshold(
         pairwise_predictions, 0.95
     )
-
