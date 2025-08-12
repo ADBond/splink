@@ -164,7 +164,11 @@ def compute_proportions_for_new_parameters(
     try:
         import duckdb
 
-        m_u_df = df_params.as_dataframe("duckdb")
+        # convert to dataframe, using chosen backend
+        # convert from that backend to duckdb
+        # that is all
+        m_u_df = df_params.as_dataframe()
+
         sql = compute_proportions_for_new_parameters_sql("m_u_df")
 
         # TODO: super brittle, just PoC:
