@@ -901,7 +901,7 @@ testing = ["pytest", "pytest-benchmark"]
 name = "polars"
 version = "1.8.2"
 description = "Blazingly fast DataFrame library"
-optional = true
+optional = false
 python-versions = ">=3.8"
 files = [
     {file = "polars-1.8.2-cp38-abi3-macosx_10_12_x86_64.whl", hash = "sha256:114be1ebfb051b794fb9e1f15999430c79cc0824595e237d3f45632be3e56d73"},
@@ -1752,4 +1752,4 @@ spark = ["pyspark"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8.0,<4.0.0"
-content-hash = "8d6857f9255832d236db3563bf532757dcc7ada7d01c05bcaf01d759fbabb5ec"
+content-hash = "be9bbf44c624d58772e82d8d4bdfefb142a32ba2c482e975f61c6e71416bdff1"
