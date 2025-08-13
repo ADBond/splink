@@ -157,28 +157,27 @@ def compute_proportions_for_new_parameters(
     df_params: SplinkDataFrame,
 ) -> List[dict[str, Any]]:
     # Execute with duckdb if installed, otherwise default to pandas
-
     try:
         import duckdb
-
-        # convert to dataframe, using chosen backend
-        # convert from that backend to duckdb
-        # that is all
-        m_u_df = df_params.as_dataframe()
-
-        sql = compute_proportions_for_new_parameters_sql("m_u_df")
-
-        # TODO: super brittle, just PoC:
-        con = getattr(df_params.db_api, "_con", duckdb)
-
-        ddb_relation = con.query(sql)
-        # TODO: borrowed from DuckDBDataFrame.as_record_dict - reusable?
-        rows = ddb_relation.fetchall()
-        column_names = [desc[0] for desc in ddb_relation.description]
-        return [dict(zip(column_names, row)) for row in rows]
     except (ImportError, ModuleNotFoundError):
         m_u_df = df_params.as_pandas_dataframe()
         return compute_proportions_for_new_parameters_pandas(m_u_df)
+
+    # convert to dataframe, using chosen backend
+    # convert from that backend to duckdb
+    # that is all
+    m_u_df = df_params.as_dataframe()
+
+    sql = compute_proportions_for_new_parameters_sql("m_u_df")
+
+    # TODO: super brittle, just PoC:
+    con = getattr(df_params.db_api, "_con", duckdb)
+
+    ddb_relation = con.query(sql)
+    # TODO: borrowed from DuckDBDataFrame.as_record_dict - reusable?
+    rows = ddb_relation.fetchall()
+    column_names = [desc[0] for desc in ddb_relation.description]
+    return [dict(zip(column_names, row)) for row in rows]
 
 
 def populate_m_u_from_lookup(
