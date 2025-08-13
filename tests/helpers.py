@@ -54,7 +54,6 @@ class TestHelper(ABC):
 
 
 class DuckDBTestHelper(TestHelper):
-
     def __init__(self):
         self.con = duckdb.connect()
 
