@@ -33,7 +33,7 @@ jobs:
         run: |
           poetry config virtualenvs.in-project true
           poetry install --no-interaction --no-root
-          poetry run show
+          poetry show
 
       - name: Run tests with coverage
         run: |

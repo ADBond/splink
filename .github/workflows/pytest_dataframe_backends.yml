@@ -37,7 +37,7 @@ jobs:
             poetry install --no-interaction --no-root --without=dataframes
           fi
           # check installed library versions
-          poetry run python -m pip freeze
+          poetry show
 
       - name: Run tests
         run: |
