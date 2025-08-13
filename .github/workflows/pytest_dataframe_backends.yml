@@ -18,7 +18,7 @@ jobs:
       matrix:
         python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
         dataframe-backend: ["pandas", "polars", "pyarrow", "no_df_backend"]
-    name: Run tests with Python ${{ matrix.python-version }}
+    name: Run tests with Python ${{ matrix.python-version }} and df-backend ${{ matrix.dataframe-backend }}
     steps:
       - uses: actions/checkout@v4
 
