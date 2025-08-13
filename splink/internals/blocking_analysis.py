@@ -410,9 +410,11 @@ def _cumulative_comparisons_to_be_scored_from_blocking_rules(
     )
 
     if result_df.shape[0] > 0:
-        complete_df = all_rules_df.join(
-            result_df, on="match_key", how="left"
-        ).with_columns(row_count=nw.col("row_count").fill_null(0).cast(nw.Int64))
+        complete_df = (
+            all_rules_df.join(result_df, on="match_key", how="left")
+            .with_columns(row_count=nw.col("row_count").fill_null(0).cast(nw.Int64))
+            .sort(by="match_key")
+        )
 
         complete_df = complete_df.with_columns(
             cumulative_rows=complete_df["row_count"].cum_sum().cast(nw.Int64),

@@ -121,6 +121,8 @@ def validate_blocking_output(comparison_count_args, expected_out):
             **comparison_count_args
         ).to_dict(as_series=False)
     )
+    # ensure dict is ordered by match_key, as that is what our expected output is w.r.t.
+    records.sort(key=lambda x: int(x["match_key"]))
 
     assert expected_out["row_count"] == list(map(lambda x: x["row_count"], records))
 
