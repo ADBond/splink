@@ -76,6 +76,7 @@ pyarrow = [
     { version = ">=7.0.0", python = "<3.13" },
     { version = ">=18.0.0", python = ">=3.13" }
 ]
+polars = {version=">=1.0.0"}
 
 [tool.poetry.group.linting]
 [tool.poetry.group.linting.dependencies]
@@ -149,6 +150,9 @@ markers = [
     "postgres_only",
 # dataframe backends
     "no_df_backend",
+    "polars",
+    "pandas",
+    "pyarrow",
 ]
 
 [tool.mypy]
