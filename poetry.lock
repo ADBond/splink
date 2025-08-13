@@ -1741,8 +1741,7 @@ type = ["pytest-mypy"]
 
 [extras]
 athena = ["awswrangler"]
-numpy = ["numpy", "numpy"]
-pandas = ["pandas", "pandas"]
+pandas = ["numpy", "numpy", "pandas", "pandas"]
 polars = ["polars"]
 postgres = ["psycopg2-binary"]
 pyarrow = ["pyarrow", "pyarrow"]
@@ -1752,4 +1751,4 @@ spark = ["pyspark"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8.0,<4.0.0"
-content-hash = "be9bbf44c624d58772e82d8d4bdfefb142a32ba2c482e975f61c6e71416bdff1"
+content-hash = "de344eacb40d1181d24b2f1148d03380f502dd8d3ba38d7cb2dbb4a7c32786de"
