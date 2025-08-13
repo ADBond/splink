@@ -1,7 +1,7 @@
 from pytest import mark
 
-from .basic_settings import get_settings_dict
-from .decorator import mark_with_dialects_excluding
+from ..basic_settings import get_settings_dict
+from ..decorator import mark_with_dialects_excluding
 
 
 @mark.no_df_backend
