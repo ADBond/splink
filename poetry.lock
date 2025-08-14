@@ -1744,11 +1744,11 @@ athena = ["awswrangler"]
 pandas = ["numpy", "numpy", "pandas", "pandas"]
 polars = ["polars", "pyarrow", "pyarrow"]
 postgres = ["psycopg2-binary"]
-pyarrow = ["pyarrow", "pyarrow"]
+pyarrow = ["numpy", "numpy", "pyarrow", "pyarrow"]
 pyspark = ["pyspark"]
 spark = ["pyspark"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8.0,<4.0.0"
-content-hash = "143471853003c6101ac593ac4b94ba0abe2327c108c79b4b45f7766e3af3bfcb"
+content-hash = "7deadeeee79c1ebcf80e19861cfb7dcc728ef75b5b88b7d3a20e6db3d0e7dd83"
