@@ -100,7 +100,9 @@ spark = ["pyspark"]
 athena = ["awswrangler"]
 postgres = ["sqlalchemy", "psycopg2-binary"]
 pandas = ["pandas", "numpy"]
-polars = ["polars"]
+# afaict spark and duckdb need pyarrow for polars compat.
+# if users really want just polars, they can install manually
+polars = ["polars", "pyarrow"]
 pyarrow = ["pyarrow"]
 
 [build-system]
