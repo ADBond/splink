@@ -44,6 +44,10 @@ def test_quickstart_particular_df_backend(dialect, test_helpers, df_backend):
 
     linker = helper.Linker(df, settings_dict, db_api)
 
+    linker.training.estimate_probability_two_random_records_match(
+        [block_on("first_name", "surname")],
+        recall=0.7,
+    )
     linker.training.estimate_u_using_random_sampling(max_pairs=1e6)
     linker.training.estimate_parameters_using_expectation_maximisation(
         block_on("first_name", "surname")
