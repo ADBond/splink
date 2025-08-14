@@ -42,7 +42,12 @@ jobs:
       - name: Run tests
         run: |
           if [ "${{ matrix.dataframe-backend }}" != "no_df_backend" ]; then
-            poetry run pytest -v --durations=0 -m "all and ${{ matrix.dataframe-backend }}" tests/test_df_backends/
+            # see issue in pytest_spark.yml
+            if [ "${{ matrix.python-version }}" = "3.12" ] || [ "${{ matrix.python-version }}" = "3.12" ] then
+              poetry run pytest -v --durations=0 -m "all and not spark and ${{ matrix.dataframe-backend }}" tests/test_df_backends/
+            else
+              poetry run pytest -v --durations=0 -m "all and ${{ matrix.dataframe-backend }}" tests/test_df_backends/
+            fi
           else
             poetry run pytest -v --durations=0 -m "all and no_df_backend"  tests/test_df_backends/
           fi
