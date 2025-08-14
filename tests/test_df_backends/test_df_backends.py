@@ -1,6 +1,11 @@
 import pytest
 
 from splink import block_on
+from splink.blocking_analysis import (
+    count_comparisons_from_blocking_rule,
+    cumulative_comparisons_to_be_scored_from_blocking_rules_chart,
+    cumulative_comparisons_to_be_scored_from_blocking_rules_data,
+)
 
 from ..basic_settings import get_settings_dict
 from ..decorator import mark_with_dialects_excluding
@@ -60,4 +65,34 @@ def test_quickstart_particular_df_backend(dialect, test_helpers, df_backend):
 
     linker.clustering.cluster_pairwise_predictions_at_threshold(
         pairwise_predictions, 0.95
+    )
+
+
+@pytest.mark.parametrize("df_backend", df_backend_params)
+@mark_with_dialects_excluding("postgres", "sqlite")
+def test_blocking_analysis_df_backend(dialect, test_helpers, df_backend):
+    helper = test_helpers[dialect]
+    db_api = helper.DatabaseAPI(**helper.db_api_args())
+    db_api.df_backend = df_backend
+
+    df = helper.load_frame_from_csv("./tests/datasets/fake_1000_from_splink_demos.csv")
+
+    count_comparisons_from_blocking_rule(
+        table_or_tables=df,
+        blocking_rule=block_on("surname"),
+        link_type="dedupe_only",
+        db_api=db_api,
+        unique_id_column_name="unique_id",
+    )
+    cumulative_comparisons_to_be_scored_from_blocking_rules_chart(
+        table_or_tables=df,
+        blocking_rules=block_on("first_name"),
+        link_type="dedupe_only",
+        db_api=db_api,
+    )
+    cumulative_comparisons_to_be_scored_from_blocking_rules_data(
+        table_or_tables=df,
+        blocking_rules=block_on("first_name"),
+        link_type="dedupe_only",
+        db_api=db_api,
     )
