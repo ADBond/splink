@@ -68,7 +68,8 @@ linting = ["ruff>=0.4.2,<0.5"]
 testing = [
     "pytest>=7.3",
     # temporarily pin pyarrow for testing, until we can resolve more carefully
-    "pyarrow>=7.0.0,<20.0.0",
+    "pyarrow>=7.0.0; python_version < '3.13'",
+    "pyarrow>=20.0.0; python_version >= '3.13'",
     "networkx>=2.5.1",
     "rapidfuzz>=2.0.3",
 ]
