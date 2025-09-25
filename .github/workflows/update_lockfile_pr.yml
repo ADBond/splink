@@ -1,7 +1,7 @@
 name: Regular uv.lock refresh PR
 on:
   schedule:
-    - cron: "25 15 * * *"
+    - cron: "27 15 * * *"
   workflow_dispatch:
 
 jobs:
