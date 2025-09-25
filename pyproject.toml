@@ -48,7 +48,7 @@ docs = [
     "jinja2==3.0.3",
     "mkdocs==1.6.0",
     "mkdocs-autorefs==1.0.1",
-    "mkdocs-charts-plugin==0.0.10",
+    "mkdocs-charts-plugin==0.0.13",
     "mkdocs-click==0.8.1",
     "mkdocs-gen-files==0.5.0",
     "mkdocs-material==9.5.2",
