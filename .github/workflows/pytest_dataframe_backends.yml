@@ -1,0 +1,53 @@
+name: Dataframe backend tests
+on:
+  pull_request:
+    branches:
+      - master
+      - "**dev"
+    paths:
+      - "splink/**"
+      - "tests/**"
+      - "pyproject.toml"
+      - "poetry.lock"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
+        dataframe-backend: ["pandas", "polars", "pyarrow", "no_df_backend"]
+    name: "Tests: ${{ matrix.python-version }} and ${{ matrix.dataframe-backend }}"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install poetry using pipx
+        run: pipx install poetry
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          if [ "${{ matrix.dataframe-backend }}" != "no_df_backend" ]; then
+            poetry install --no-interaction --no-root --without=dataframes --extras "${{ matrix.dataframe-backend }}"
+          else
+            poetry install --no-interaction --no-root --without=dataframes
+          fi
+          # check installed library versions
+          poetry show
+
+      - name: Run tests
+        run: |
+          if [ "${{ matrix.dataframe-backend }}" != "no_df_backend" ]; then
+            # see issue in pytest_spark.yml
+            if [ "${{ matrix.python-version }}" = "3.12" ] || [ "${{ matrix.python-version }}" = "3.13" ]; then
+              poetry run pytest -v --durations=0 -m "all and not spark and ${{ matrix.dataframe-backend }}" tests/test_df_backends/
+            else
+              poetry run pytest -v --durations=0 -m "all and ${{ matrix.dataframe-backend }}" tests/test_df_backends/
+            fi
+          else
+            poetry run pytest -v --durations=0 -m "all and no_df_backend"  tests/test_df_backends/
+          fi

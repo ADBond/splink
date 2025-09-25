@@ -18,6 +18,7 @@ from splink.internals.m_from_labels import estimate_m_from_pairwise_labels
 from splink.internals.m_training import estimate_m_values_from_label_column
 from splink.internals.misc import (
     ensure_is_iterable,
+    record_dict_to_records,
 )
 from splink.internals.pipeline import CTEPipeline
 from splink.internals.vertically_concatenate import (
@@ -102,7 +103,7 @@ class LinkerTraining:
                 )
             )
 
-        pd_df = _cumulative_comparisons_to_be_scored_from_blocking_rules(
+        nw_df = _cumulative_comparisons_to_be_scored_from_blocking_rules(
             splink_df_dict=self._linker._input_tables_dict,
             blocking_rules=blocking_rules,
             link_type=self._linker._settings_obj._link_type,
@@ -112,7 +113,7 @@ class LinkerTraining:
             source_dataset_input_column=self._linker._settings_obj.column_info_settings.source_dataset_input_column,
         )
 
-        records = pd_df.to_dict(orient="records")
+        records = record_dict_to_records(nw_df.to_dict(as_series=False))
 
         summary_record = records[-1]
         num_observed_matches = summary_record["cumulative_rows"]

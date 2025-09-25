@@ -5,8 +5,6 @@ import logging
 import os
 from typing import TYPE_CHECKING, Any
 
-import numpy as np
-import pandas as pd
 from jinja2 import Template
 
 from splink.internals.misc import EverythingEncoder, read_resource
@@ -67,6 +65,9 @@ def render_labelling_tool_html(
     show_splink_predictions_in_interface: bool = True,
     overwrite: bool = True,
 ) -> str:
+    import numpy as np
+    import pandas as pd
+
     settings: dict[str, Any] = linker._settings_obj.as_dict()
 
     logger.warning(

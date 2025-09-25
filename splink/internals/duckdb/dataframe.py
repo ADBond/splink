@@ -5,14 +5,17 @@ import os
 from typing import TYPE_CHECKING
 
 from duckdb import DuckDBPyRelation
-from pandas import DataFrame as pd_DataFrame
 
 from splink.internals.input_column import InputColumn
 from splink.internals.splink_dataframe import SplinkDataFrame
 
 logger = logging.getLogger(__name__)
 if TYPE_CHECKING:
+    from pandas import DataFrame as pd_DataFrame
+
     from .database_api import DuckDBAPI
+else:
+    pd_DataFrame = ...
 
 
 class DuckDBDataFrame(SplinkDataFrame):
@@ -24,9 +27,9 @@ class DuckDBDataFrame(SplinkDataFrame):
             f"SELECT column_name FROM information_schema.columns "
             f"WHERE table_name = '{self.physical_name}'"
         )
-        col_strings = (self.db_api._execute_sql_against_backend(sql).to_df().to_dict())[
-            "column_name"
-        ].values()
+        col_strings = [
+            row[0] for row in self.db_api._execute_sql_against_backend(sql).fetchall()
+        ]
 
         return [InputColumn(c, sqlglot_dialect_str="duckdb") for c in col_strings]
 
@@ -48,12 +51,11 @@ class DuckDBDataFrame(SplinkDataFrame):
         column_names = [desc[0] for desc in duckdb_table.description]
         return [dict(zip(column_names, row)) for row in rows]
 
-    def as_pandas_dataframe(self, limit: int = None) -> pd_DataFrame:
-        sql = f"select * from {self.physical_name}"
-        if limit:
-            sql += f" limit {limit}"
+    def as_polars_dataframe(self, limit=None):
+        return self.as_duckdbpyrelation(limit).pl()
 
-        return self.db_api._execute_sql_against_backend(sql).to_df()
+    def as_pandas_dataframe(self, limit: int = None) -> pd_DataFrame:
+        return self.as_duckdbpyrelation(limit).to_df()
 
     def as_duckdbpyrelation(self, limit: int = None) -> DuckDBPyRelation:
         sql = f"select * from {self.physical_name}"
