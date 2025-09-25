@@ -5,6 +5,6 @@ updates:
     schedule:
       interval: "weekly"
       day: "thursday"
-      time: "16:10"
+      time: "17:35"
       timezone: "Europe/London"
     open-pull-requests-limit: 1
