@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, List, Union
+from typing import Any, Iterable, List, Union
 
 from splink.internals.blocking import BlockingRule
 from splink.internals.blocking_rule_creator import BlockingRuleCreator
@@ -25,16 +25,18 @@ def blocking_rule_args_to_list_of_blocking_rules(
     ],
     sql_dialect: str,
 ) -> list[BlockingRule]:
-    """In functions such as `linker.estimate_probability_two_random_records_match`
-    the user may have passed in strings or BlockingRuleCreator objects.
+    """In functions such as
+    `linker.training.estimate_probability_two_random_records_match` the
+    user may have passed in strings or BlockingRuleCreator objects.
 
     Additionally, they may have passed in a single string or a single
     BlockingRuleCreator object instead of a list.
 
     This function converts the input to a list of BlockingRule objects
     """
-    rules_as_creators = [
-        to_blocking_rule_creator(br) for br in ensure_is_iterable(blocking_rule_args)
-    ]
+    br_iterable: Iterable[str | BlockingRuleCreator] = ensure_is_iterable(
+        blocking_rule_args
+    )
+    rules_as_creators = [to_blocking_rule_creator(br) for br in br_iterable]
     rules_as_brs = [br.get_blocking_rule(sql_dialect) for br in rules_as_creators]
     return rules_as_brs

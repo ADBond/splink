@@ -72,6 +72,7 @@ Here is a list of some of our known users and their use cases:
 	- The Department for Education uses Splink to match records from certain data providers to existing learners and reduce the volume of clerical work required for corrections
 	- [SAIL Databank](https://saildatabank.com/), in collaboration with [Secure eResearch Platform (SeRP)](https://serp.ac.uk/), uses Splink to produce linked cohorts for a wide range of population-level research applications
 	- [Lewisham Council](https://lewisham.gov.uk/) (London) [identified and auto-enrolled over 500 additional eligible families](https://lewisham.gov.uk/articles/news/extra-funding-for-lewisham-schools-in-pilot-data-project) to receive Free School Meals
+	- [Leicestershire County Council](https://www.leicestershire.gov.uk/) use Splink to match individuals across their Education and Social Care systems.  This ensures triage and front-line practitioners have a complete picture of those individuals.
 	- [Integrated Corporate Services](https://icsdigital.blog.gov.uk/2024/05/24/introducing-ics-digital/) have used Splink to match address data in historical datasets, substantially improving match rates.
 	- [London Office of Technology and Innovation](https://loti.london/) created a dashboard to help [better measure and reduce rough sleeping](https://loti.london/projects/rough-sleeping-insights-project/) across London
 	- [Competition and Markets Authority](https://www.gov.uk/government/organisations/competition-and-markets-authority) identified ['Persons with Significant Control' and estimated ownership groups](https://assets.publishing.service.gov.uk/media/626ab6c4d3bf7f0e7f9d5a9b/220426_Annex_-State_of_Competition_Appendices_FINAL.pdf) across companies
@@ -80,6 +81,9 @@ Here is a list of some of our known users and their use cases:
 	- [Homes England](https://www.gov.uk/government/organisations/homes-england) has been working with the new developed Splink address matching version. We have succesfully tested and checked the linkage between Land Registry Price Paid dataset and the new Ordnance Survey National Geographical Dataset (NGD) but adddresses. The current linkage performs around 30 Million records in less than 5 hours with a high accuracy in a Databricks environment. This is helping Homes England with a vital component to identify and monitor new builds that will contribute to the 1.5 M homes mandate.
 	- The [Department for Business and Trade](https://www.gov.uk/government/organisations/department-for-business-and-trade) plans to use Splink as part of [Matchbox](https://github.com/uktrade/matchbox) to reconcile business and product data for both analytical and operational use
  	- The [Welsh Revenue Authority](https://www.gov.wales/welsh-revenue-authority) uses Splink in multiple linkage workflows to identify links in their own data, as well as to third party data for operational support in ensuring a fair tax system for Wales.
+	- Richmond Council and Wandsworth Council are using Splink to match residents’ records across systems to create unified records and a single view of debt.
+	- [Westmorland & Furness Council](https://www.simpson-associates.co.uk/clients/westmorland-furness-council/) used Splink to matched and de-duplicated Special Educational Needs and Disability (SEND) records across systems.  This provided a “single view of the child”, improved data quality and automation, and laid the foundation for a wider “Single View of the Customer” initiative.
+
 
 === "Public Sector (International)"
 
@@ -87,8 +91,9 @@ Here is a list of some of our known users and their use cases:
 	- 🇩🇪 The German Federal Statistical Office ([Destatis](https://www.destatis.de/EN/Home/_node.html)) uses Splink to conduct projects in linking register-based census data.
 	- 🇪🇺 The [European Medicines Agency](https://www.ema.europa.eu/en/homepage) uses Splink to detect duplicate adverse event reports for veterinary medicines
 	- 🇺🇸 The Defense Health Agency (US Department of Defense) used Splink to identify duplicated hospital records across over 200 million data points in the military hospital data system
-	- 🌐 [UNHCR](unhcr.org) uses Splink to analyse and enhance the quality of datasets by identifying and addressing potential duplicates.
+	- 🌐 [UNHCR](https://unhcr.org) uses Splink to analyse and enhance the quality of datasets by identifying and addressing potential duplicates.
 	- 🇨🇦 The Data Integration Unit at the [Ontario Ministry of Children, Community, and Social Services](https://www.ontario.ca/page/ministry-children-community-and-social-services) are using Splink as their main data-integration tool for all intra- and inter-ministerial data-linking projects.
+	- 🇬🇲 Splink has been used to support the 2024 Gambian census by analysing and linking data from the census and the post-enumeration survey.
 	- 🇨🇦 Environment and Climate Change Canada is a user of Splink to connect datasets from various administrative and reporting programs.
 	- 🇨🇱🇬🇧 [Chilean Ministry of Health](https://www.gob.cl/en/ministries/ministry-of-health/) and [University College London](https://www.ucl.ac.uk/) have [assessed the access to immunisation programs among the migrant population](https://ijpds.org/article/view/2348)
 	- 🇺🇸 [Florida Cancer Registry](https://www.floridahealth.gov/diseases-and-conditions/cancer/cancer-registry/index.html), published a [feasibility study](https://scholar.googleusercontent.com/scholar?q=cache:sADwxy-D75IJ:scholar.google.com/+splink+florida&hl=en&as_sdt=0,5) which showed Splink was faster and more accurate than alternatives
@@ -97,7 +102,7 @@ Here is a list of some of our known users and their use cases:
 === "Academia"
 
 	- [Stanford University](https://www.stanford.edu/) investigated the impact of [receiving government assistance has on political attitudes](https://www.cambridge.org/core/journals/american-political-science-review/article/abs/does-receiving-government-assistance-shape-political-attitudes-evidence-from-agricultural-producers/39552BC5A496EAB6CB484FCA51C6AF21)
-	- Researchers from [Harvard Medical School](https://hms.harvard.edu/), [Vanderbilt University Medical Center](https://www.vumc.org/) and [Brigham and Women's Hospital](https://www.brighamandwomens.org/) published a study on [augmenting death ascertainment in electronic health records using publicly available internet media sources]([https://doi.org/10.1101/2025.01.24.25321042](https://www.medrxiv.org/content/medrxiv/early/2025/01/27/2025.01.24.25321042.full.pdf)).
+	- Researchers from [Harvard Medical School](https://hms.harvard.edu/), [Vanderbilt University Medical Center](https://www.vumc.org/) and [Brigham and Women's Hospital](https://www.brighamandwomens.org/) published a study on [augmenting death ascertainment in electronic health records using publicly available internet media sources](https://doi.org/10.1101/2025.01.24.25321042).
 	- [Bern University](https://arbor.bfh.ch/) researched how [Active Learning can be applied to Biomedical Record Linkage](https://ebooks.iospress.nl/doi/10.3233/SHTI230545)
 	- [University of Pennsylvania](https://www.upenn.edu/), [Princeton](https://www.princeton.edu/), and [UC Berkeley](https://www.berkeley.edu/) researchers used Splink to link property data, voter files, and campaign donations, creating a dataset of 108M individuals to study the American voter base - see [here](https://www.cambridge.org/core/services/aop-cambridge-core/content/view/04A0071D849FBC3E1DEEB2962A6B977F/S0003055425000061a.pdf).
 
