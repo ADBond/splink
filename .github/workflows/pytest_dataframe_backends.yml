@@ -8,7 +8,7 @@ on:
       - "splink/**"
       - "tests/**"
       - "pyproject.toml"
-      - "poetry.lock"
+      - "uv.lock"
 
 jobs:
   test:
@@ -22,32 +22,40 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install poetry using pipx
-        run: pipx install poetry
-
-      - uses: actions/setup-python@v5
+      - name: Setup uv
+        id: setup-uv
+        uses: astral-sh/setup-uv@v2
         with:
-          python-version: ${{ matrix.python-version }}
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Install Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: uv sync -p ${{ matrix.python-version }}
 
       - name: Install dependencies
         run: |
           if [ "${{ matrix.dataframe-backend }}" != "no_df_backend" ]; then
-            poetry install --no-interaction --no-root --without=dataframes --extras "${{ matrix.dataframe-backend }}"
+            uv sync -p ${{ matrix.python-version }} --no-group dataframes --extra "${{ matrix.dataframe-backend }}"
           else
-            poetry install --no-interaction --no-root --without=dataframes
+            uv sync -p ${{ matrix.python-version }} --no-group dataframes
           fi
           # check installed library versions
-          poetry show
+          uv tree
 
       - name: Run tests
         run: |
           if [ "${{ matrix.dataframe-backend }}" != "no_df_backend" ]; then
             # see issue in pytest_spark.yml
             if [ "${{ matrix.python-version }}" = "3.12" ] || [ "${{ matrix.python-version }}" = "3.13" ]; then
-              poetry run pytest -v --durations=0 -m "all and not spark and ${{ matrix.dataframe-backend }}" tests/test_df_backends/
+              uv run --no-sync python -m pytest -v --durations=0 -m "all and not spark and ${{ matrix.dataframe-backend }}" tests/test_df_backends/
             else
-              poetry run pytest -v --durations=0 -m "all and ${{ matrix.dataframe-backend }}" tests/test_df_backends/
+              uv run --no-sync python -m pytest -v --durations=0 -m "all and ${{ matrix.dataframe-backend }}" tests/test_df_backends/
             fi
           else
-            poetry run pytest -v --durations=0 -m "all and no_df_backend"  tests/test_df_backends/
+            uv run --no-sync python -m pytest -v --durations=0 -m "all and no_df_backend"  tests/test_df_backends/
           fi
+          # double-check versions after running
+          uv tree
