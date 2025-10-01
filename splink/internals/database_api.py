@@ -11,6 +11,7 @@ from typing import (
     Dict,
     Generic,
     List,
+    Literal,
     Optional,
     TypeVar,
     Union,
@@ -63,7 +64,7 @@ class DatabaseAPI(ABC, Generic[TablishType]):
         self._cache_uid: str = ascii_uid(8)
         # TODO: check with imports etc for priority, for default value
         # TODO: how do we let users choose, without having to alter every subclass?
-        self.df_backend = "pandas"
+        self.df_backend: Literal["pandas", "polars", "pyarrow"] = "pandas"
 
     @final
     def _log_and_run_sql_execution(
