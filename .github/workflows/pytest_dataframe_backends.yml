@@ -1,0 +1,61 @@
+name: Dataframe backend tests
+on:
+  pull_request:
+    branches:
+      - master
+      - "**dev"
+    paths:
+      - "splink/**"
+      - "tests/**"
+      - "pyproject.toml"
+      - "uv.lock"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
+        dataframe-backend: ["pandas", "polars", "pyarrow", "no_df_backend"]
+    name: "Tests: ${{ matrix.python-version }} and ${{ matrix.dataframe-backend }}"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup uv
+        id: setup-uv
+        uses: astral-sh/setup-uv@v2
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Install Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: uv sync -p ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          if [ "${{ matrix.dataframe-backend }}" != "no_df_backend" ]; then
+            uv sync -p ${{ matrix.python-version }} --no-group dataframes --extra "${{ matrix.dataframe-backend }}"
+          else
+            uv sync -p ${{ matrix.python-version }} --no-group dataframes
+          fi
+          # check installed library versions
+          uv tree
+
+      - name: Run tests
+        run: |
+          if [ "${{ matrix.dataframe-backend }}" != "no_df_backend" ]; then
+            # see issue in pytest_spark.yml
+            if [ "${{ matrix.python-version }}" = "3.12" ] || [ "${{ matrix.python-version }}" = "3.13" ]; then
+              uv run --no-sync python -m pytest -v --durations=0 -m "all and not spark and ${{ matrix.dataframe-backend }}" tests/test_df_backends/
+            else
+              uv run --no-sync python -m pytest -v --durations=0 -m "all and ${{ matrix.dataframe-backend }}" tests/test_df_backends/
+            fi
+          else
+            uv run --no-sync python -m pytest -v --durations=0 -m "all and no_df_backend"  tests/test_df_backends/
+          fi
+          # double-check versions after running
+          uv tree

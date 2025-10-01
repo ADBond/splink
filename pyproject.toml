@@ -12,16 +12,17 @@ authors = [
 ]
 requires-python = ">=3.8.0,<4.0.0"
 readme = "README.md"
+
 license = "MIT"
 dependencies = [
     "jsonschema>=3.2",
-    "pandas>=1.3.5",
     "duckdb>=0.9.2",
     "sqlglot>=17.6.0",
     "altair>=5.0.1",
     "Jinja2>=3.0.3",
     "numpy>=1.17.3",
     "igraph>=0.11.2",
+    "narwhals>=1.40.0",
 ]
 
 [project.optional-dependencies]
@@ -29,6 +30,11 @@ pyspark = ["pyspark>=3.2.1,<4.0.0"]
 spark = ["pyspark>=3.2.1"]
 athena = ["awswrangler"]
 postgres = ["sqlalchemy>=1.4.0", "psycopg2-binary>=2.8.0"]
+pandas = ["pandas>=1.3.5", "numpy>=1.17.3"]
+# afaict spark and duckdb need pyarrow for polars compat.
+# if users really want just polars, they can install manually
+polars = ["polars>=1.0.0", "pyarrow>=7.0.0"]
+pyarrow = ["pyarrow>=7.0.0", "numpy>=1.17.3"]
 
 [project.urls]
 Homepage = "https://github.com/moj-analytical-services/splink"
@@ -40,6 +46,12 @@ dev = [
     "pyspark>=3.2.1",
     "sqlalchemy>=1.4.0",
     "psycopg2-binary>=2.8.0",
+]
+dataframes = [
+    "pandas>=1.3.5",
+    "numpy>=1.17.3",
+    "pyarrow>=7.0.0",
+    "polars>=1.0.0",
 ]
 docs = [
     "griffe==0.49.0",
@@ -75,6 +87,7 @@ typechecking = ["mypy==1.9.0"]
 [tool.uv]
 default-groups = [
     "dev",
+    "dataframes",
     "linting",
     "testing",
     "typechecking",
@@ -124,6 +137,11 @@ markers = [
     "sqlite_only",
     "postgres",
     "postgres_only",
+# dataframe backends
+    "no_df_backend",
+    "polars",
+    "pandas",
+    "pyarrow",
 ]
 
 [tool.mypy]

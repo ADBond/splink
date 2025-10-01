@@ -4,7 +4,7 @@ import logging
 import math
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple, Union
 
-import pandas as pd
+import narwhals as nw
 import sqlglot
 
 from splink.internals.blocking import (
@@ -23,7 +23,11 @@ from splink.internals.charts import (
 )
 from splink.internals.database_api import AcceptableInputTableType, DatabaseAPISubClass
 from splink.internals.input_column import InputColumn
-from splink.internals.misc import calculate_cartesian, ensure_is_iterable
+from splink.internals.misc import (
+    calculate_cartesian,
+    ensure_is_iterable,
+    record_dict_to_records,
+)
 from splink.internals.pipeline import CTEPipeline
 from splink.internals.splink_dataframe import SplinkDataFrame
 from splink.internals.vertically_concatenate import (
@@ -288,7 +292,7 @@ def _cumulative_comparisons_to_be_scored_from_blocking_rules(
     max_rows_limit: int = int(1e9),
     unique_id_input_column: InputColumn,
     source_dataset_input_column: Optional[InputColumn],
-) -> pd.DataFrame:
+) -> nw.DataFrame[Any]:
     # Check none of the blocking rules will create a vast/computationally
     # intractable number of comparisons
     for br in blocking_rules:
@@ -390,33 +394,46 @@ def _cumulative_comparisons_to_be_scored_from_blocking_rules(
     """
     pipeline.enqueue_sql(sql, "__splink__df_count_cumulative_blocks")
 
-    result_df = db_api.sql_pipeline_to_splink_dataframe(pipeline).as_pandas_dataframe()
+    backend = db_api.df_backend
+    result_df = nw.from_native(
+        db_api.sql_pipeline_to_splink_dataframe(pipeline).as_dataframe(backend=backend),
+    )
 
     # The above table won't include rules that have no matches
-    all_rules_df = pd.DataFrame(
-        {
-            "match_key": [str(i) for i in range(len(blocking_rules))],
-            "blocking_rule": [br.blocking_rule_sql for br in blocking_rules],
-        }
+    all_rules = {
+        "match_key": [str(i) for i in range(len(blocking_rules))],
+        "blocking_rule": [br.blocking_rule_sql for br in blocking_rules],
+    }
+    all_rules_df = nw.from_dict(
+        all_rules,
+        backend=backend,
     )
-    if len(result_df) > 0:
-        complete_df = all_rules_df.merge(result_df, on="match_key", how="left").fillna(
-            {"row_count": 0}
+
+    if result_df.shape[0] > 0:
+        complete_df = (
+            all_rules_df.join(result_df, on="match_key", how="left")
+            .with_columns(row_count=nw.col("row_count").fill_null(0).cast(nw.Int64))
+            .sort(by="match_key")
         )
 
-        complete_df["cumulative_rows"] = complete_df["row_count"].cumsum().astype(int)
-        complete_df["start"] = complete_df["cumulative_rows"] - complete_df["row_count"]
-        complete_df["cartesian"] = cartesian_count
-
-        for c in ["row_count", "cumulative_rows", "cartesian", "start"]:
-            complete_df[c] = complete_df[c].astype(int)
+        complete_df = complete_df.with_columns(
+            cumulative_rows=complete_df["row_count"].cum_sum().cast(nw.Int64),
+            cartesian=nw.lit(cartesian_count),
+        )
+        complete_df = complete_df.with_columns(
+            start=complete_df["cumulative_rows"] - complete_df["row_count"]
+        )
+        complete_df = complete_df.with_columns(
+            start=complete_df["start"].cast(nw.Int64)
+        )
 
     else:
-        complete_df = all_rules_df.copy()
-        complete_df["row_count"] = 0
-        complete_df["cumulative_rows"] = 0
-        complete_df["cartesian"] = cartesian_count
-        complete_df["start"] = 0
+        complete_df = all_rules_df.with_columns(
+            row_count=nw.lit(0),
+            cumulative_rows=nw.lit(0),
+            cartesian=nw.lit(cartesian_count),
+            start=nw.lit(0),
+        )
 
     [b.drop_materialised_id_pairs_dataframe() for b in exploding_br_with_id_tables]
 
@@ -428,8 +445,9 @@ def _cumulative_comparisons_to_be_scored_from_blocking_rules(
         "match_key",
         "start",
     ]
+    complete_df = complete_df[col_order]
 
-    return complete_df[col_order]
+    return complete_df
 
 
 def _count_comparisons_generated_from_blocking_rule(
@@ -614,7 +632,7 @@ def cumulative_comparisons_to_be_scored_from_blocking_rules_data(
     unique_id_column_name: str = "unique_id",
     max_rows_limit: int = int(1e9),
     source_dataset_column_name: Optional[str] = None,
-) -> pd.DataFrame:
+) -> nw.DataFrame[Any]:
     """TODO: Add docstring here"""
     splink_df_dict = db_api.register_multiple_tables(table_or_tables)
 
@@ -682,7 +700,7 @@ def cumulative_comparisons_to_be_scored_from_blocking_rules_chart(
         db_api.sql_dialect.sql_dialect_str,
     )
 
-    pd_df = _cumulative_comparisons_to_be_scored_from_blocking_rules(
+    nw_df = _cumulative_comparisons_to_be_scored_from_blocking_rules(
         splink_df_dict=splink_df_dict,
         blocking_rules=blocking_rules_as_br,
         link_type=link_type,
@@ -693,7 +711,7 @@ def cumulative_comparisons_to_be_scored_from_blocking_rules_chart(
     )
 
     return cumulative_blocking_rule_comparisons_generated(
-        pd_df.to_dict(orient="records")
+        record_dict_to_records(nw_df.to_dict(as_series=False))
     )
 
 
