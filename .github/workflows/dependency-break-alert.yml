@@ -2,12 +2,8 @@ name: Dependency canary
 
 on:
   schedule:
-    - cron: "30 6 * * *"
+    - cron: "0 6 * * *"
   workflow_dispatch:
-
-permissions:
-  contents: write
-  pull-requests: write
 
 concurrency:
   group: daily-uv-canary
@@ -19,32 +15,13 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+        uses: actions/checkout@v5
 
       - name: Setup uv
         uses: astral-sh/setup-uv@v6
 
       - name: Install Python 3.13
         run: uv python install 3.13
-
-      - name: Skip if PR already open
-        id: prcheck
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -e
-          BRANCH="deps/uv-upgrade-failed"
-          COUNT=$(gh pr list --state open --head "$BRANCH" --json number --jq 'length')
-          if [ "$COUNT" -gt 0 ]; then
-            echo "open=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "open=false" >> "$GITHUB_OUTPUT"
-          fi
-      - if: steps.prcheck.outputs.open == 'true'
-        run: echo "PR already open; skipping run." && exit 0
-
       - name: Upgrade lockfile
         run: uv lock --upgrade
 
@@ -65,23 +42,3 @@ jobs:
         if: steps.changed.outputs.changed == 'true'
         id: tests
         run: uv run python -m pytest -m "duckdb" tests/
-        continue-on-error: true
-
-      - name: Open/update PR if upgraded packages fail
-        if: steps.changed.outputs.changed == 'true' && steps.tests.outcome == 'failure'
-        uses: peter-evans/create-pull-request@v6
-        with:
-          branch: deps/uv-upgrade-failed
-          title: "[auto] lockfile upgrade causes test failures"
-          commit-message: "[auto] upgrade tested dependencies - failing"
-          body: |
-            This PR was created automatically because upgrading dependencies via
-            `uv lock --upgrade` caused test failures.
-
-            Please review breakages, and examine full test suite
-          add-paths: uv.lock
-          labels: dependencies, continuous integration
-
-      - name: Fail job if tests failed
-        if: steps.tests.outcome == 'failure'
-        run: exit 1
