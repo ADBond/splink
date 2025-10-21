@@ -36,9 +36,9 @@ Repository = "https://github.com/moj-analytical-services/splink"
 [dependency-groups]
 dev = [
     "tabulate>=0.8.9",
-    "pyspark>=3.2.1",
-    "sqlalchemy>=1.4.0",
-    "psycopg2-binary>=2.8.0",
+    "pyspark>=3.5.7",
+    "sqlalchemy>=2.0.0",
+    "psycopg2-binary>=2.9.10",
 ]
 docs = [
     "griffe==0.49.0",
@@ -64,8 +64,6 @@ docs = [
 ]
 linting = ["ruff>=0.4.2,<0.5"]
 testing = [
-    "pytest>=7.3",
-    "pyarrow>=7.0.0",
     "pytest>=8.3.5",
     "pyarrow>=17.0.0",
     "networkx>=3.1",
