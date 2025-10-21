@@ -32,6 +32,27 @@ if version_info.minor == 8:
         stacklevel=2,
     )
 
+# custom warning class, so that users can filter if they need to
+class SparkCompatibilityWarning(UserWarning):
+    pass
+
+# warning for Spark 4
+try:
+    import pyspark
+    major, _, _ = pyspark.__version__.split(".")
+    if int(major) >= 4:
+        warn(
+            (
+                "You are using Spark 4. Some small amount of functionality in Splink "
+                "may be unavailable - in-built UDFs, and automatic date-parsing for "
+                "malformed dates.  Core functionality should remain unaffected."
+            ),
+            category=SparkCompatibilityWarning,
+            stacklevel=2
+        )
+except ModuleNotFoundError:
+    pass
+
 
 # Use getarr to make the error appear at the point of use
 def __getattr__(name):
