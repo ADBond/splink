@@ -379,14 +379,20 @@ def _cumulative_comparisons_to_be_scored_from_blocking_rules(
     con = duckdb.connect()
 
     # The above table won't include rules that have no matches
-    con.execute("CREATE TABLE all_rules (match_key VARCHAR, blocking_rule VARCHAR);")
+    con.execute(
+        "CREATE TABLE all_rules "
+        "(match_key VARCHAR, blocking_rule VARCHAR, cartesian BIGINT);"
+    )
     con.executemany(
-        "INSERT INTO all_rules VALUES (:match_key, :blocking_rule)",
-        {
-            "match_key": [str(i) for i in range(len(blocking_rules))],
-            "blocking_rule": [br.blocking_rule_sql for br in blocking_rules],
-            "cartesian": [cartesian_count] * len(blocking_rules),
-        },
+        "INSERT INTO all_rules VALUES ($match_key, $blocking_rule, $cartesian);",
+        [
+            {
+                "match_key": str(i),
+                "blocking_rule": br.blocking_rule_sql,
+                "cartesian": cartesian_count,
+            }
+            for i, br in enumerate(blocking_rules)
+        ],
     )
 
     if len(result_df) > 0:
@@ -406,7 +412,7 @@ def _cumulative_comparisons_to_be_scored_from_blocking_rules(
             )
             SELECT
                 blocking_rule,
-                0 as row_count,
+                row_count,
                 sum(row_count) over
                     (
                         order by match_key
@@ -425,7 +431,7 @@ def _cumulative_comparisons_to_be_scored_from_blocking_rules(
         sql = """
             select
                 blocking_rule,
-                row_count,
+                0 as row_count,
                 0 as cumulative_rows,
                 cartesian,
                 match_key,
