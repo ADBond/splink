@@ -73,7 +73,7 @@ synthetic_comparison_df
 
 # %%
 from splink import DuckDBAPI
-from splink import Linker, SettingsCreator
+from splink import Linker
 from splink import splink_datasets
 
 db_api = DuckDBAPI()
@@ -81,7 +81,8 @@ db_api = DuckDBAPI()
 production_df = splink_datasets.historical_50k
 
 # %%
-linker = Linker(production_df, settings='../../demo_settings/model_h50k.json', db_api=db_api)
+# TODO: Update path to model settings json file as needed
+linker = Linker(production_df, settings='docs/demos/demo_settings/model_h50k.json', db_api=db_api)
 
 # %% [markdown]
 # It's useful to visualise the model parameters to learn the relative importance of different parts of your data for linking.

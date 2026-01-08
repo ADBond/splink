@@ -49,8 +49,8 @@
 #
 
 # %%
-import duckdb
 import altair as alt
+import duckdb
 
 df_companies_house = duckdb.read_parquet("https://github.com/RobinL/company_matching_example/raw/refs/heads/main/companies_house.parquet")
 df_companies_house.sort("company_name").show(max_rows=5)
@@ -210,7 +210,7 @@ select
     company_number,
     COALESCE(
         REGEXP_EXTRACT(address_concat, '(\\d+[A-Z]?)'),
-        REGEXP_EXTRACT(address_concat, '(\\S+)(?=\\s+HOUSE)')
+        REGEXP_EXTRACT(address_concat, '(\\S+)\\s+HOUSE', 1)
     ) AS first_num_in_address,
     postcode,
     name_tokens_with_freq,
