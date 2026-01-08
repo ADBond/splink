@@ -38,7 +38,9 @@ Repository = "https://github.com/moj-analytical-services/splink"
 core = ["sqlglot", "pandas"]
 demos = [
     "ipywidgets>=8.1.7",
+    "jupytext>=1.18.1",
     "nbmake>=1.5.5",
+    "pseudopeople>=1.2.6",
     "pytest-xdist>=3.6.1",
 ]
 dev = [
