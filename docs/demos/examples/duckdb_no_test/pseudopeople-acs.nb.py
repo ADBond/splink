@@ -46,6 +46,7 @@
 import numpy as np
 import pandas as pd
 import pseudopeople as psp
+from IPython.display import display
 
 pd.set_option("display.max_columns", 7)
 
@@ -480,10 +481,10 @@ linker.visualisations.waterfall_chart(
 # %%
 linker.visualisations.waterfall_chart(
     # choose comparisons that have a term frequency adjustment for address
-    df_predictions[df_predictions.bf_tf_adj_address != 1]
+    df_predictions[df_predictions.mw_tf_adj_address != 0]
     .head(10)  # only display some of the first such comparisons
     .sort_values(
-        "bf_tf_adj_address"
+        "mw_tf_adj_address"
     )  # sort by lowest adjustment (common addresses) first
     .to_dict(orient="records")
 )
