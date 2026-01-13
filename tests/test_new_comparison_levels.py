@@ -77,7 +77,7 @@ def test_cll_creators_run_predict(dialect, test_helpers):
     helper = test_helpers[dialect]
     df = helper.load_frame_from_csv("./tests/datasets/fake_1000_from_splink_demos.csv")
 
-    linker = helper.Linker(df, cll_settings, **helper.extra_linker_args())
+    linker = helper.linker_with_registration(df, cll_settings)
     linker.inference.predict()
 
 
@@ -173,7 +173,7 @@ def test_cl_creators_run_predict(dialect, test_helpers):
     helper = test_helpers[dialect]
     df = helper.load_frame_from_csv("./tests/datasets/fake_1000_from_splink_demos.csv")
 
-    linker = helper.Linker(df, cl_settings, **helper.extra_linker_args())
+    linker = helper.linker_with_registration(df, cl_settings)
 
     linker.inference.predict()
 
@@ -203,7 +203,7 @@ def test_regex_fall_through(dialect, test_helpers):
         ],
     }
 
-    linker = helper.Linker(df, settings, **helper.extra_linker_args())
+    linker = helper.linker_with_registration(df, settings)
     df_e = linker.inference.predict().as_pandas_dataframe()
 
     # only entry should be in Else level
@@ -233,7 +233,7 @@ def test_null_pattern_match(dialect, test_helpers):
         ],
     }
 
-    linker = helper.Linker(df, settings, **helper.extra_linker_args())
+    linker = helper.linker_with_registration(df, settings)
     df_e = linker.inference.predict().as_pandas_dataframe()
 
     # only entry should be in Null level
@@ -277,7 +277,7 @@ def test_ctl_creators_run_predict(dialect, test_helpers):
     helper = test_helpers[dialect]
     df = helper.load_frame_from_csv("./tests/datasets/fake_1000_from_splink_demos.csv")
 
-    linker = helper.Linker(df, cl_settings_2, **helper.extra_linker_args())
+    linker = helper.linker_with_registration(df, cl_settings_2)
     linker.inference.predict()
 
 
