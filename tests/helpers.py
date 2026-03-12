@@ -38,14 +38,14 @@ class TestHelper(ABC):
         pass
 
     def load_frame_from_csv(self, path):
-        import pyarrow.csv as pv
+        import pandas as pd
 
-        return pv.read_csv(path)
+        return pd.read_csv(path)
 
     def load_frame_from_parquet(self, path):
-        import pyarrow.parquet as pq
+        import pandas as pd
 
-        return pq.read_parquet(path)
+        return pd.read_parquet(path)
 
     @property
     def arrays_from(self) -> int:
