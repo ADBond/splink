@@ -10,7 +10,7 @@ from splink.internals.settings_creator import SettingsCreator
 
 # The following is a workaround for the fact that dependencies of particular backends
 # may not be installed, but we don't want this to prevent import
-# of the other backends.
+# of the other backends..
 
 # This enables auto-complete to be used to import the various DBAPIs
 # and ensures that typing information is retained so e.g. the arguments autocomplete
