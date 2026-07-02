@@ -26,3 +26,6 @@ pg-start:
 
 pg-stop:
 	./scripts/postgres_docker/teardown.sh
+
+demos:
+	cd docs/demos && bash ../../scripts/run_notebooks.sh $(DEMO_PATH)
