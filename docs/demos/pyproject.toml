@@ -1,0 +1,7 @@
+[project]
+name = "splink-demos"
+version = "5.0.0"
+description = "Splink demos"
+readme = "README.md"
+requires-python = ">=3.10.0, <4.0.0"
+dependencies = []
