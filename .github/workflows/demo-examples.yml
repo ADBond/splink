@@ -44,6 +44,6 @@ jobs:
         id: install_dependencies
         run: cd docs/demos && uv sync --python ${{ matrix.python-version }}
 
-      - name: Run tests
-        id: run_tests
+      - name: Run example notebooks (${{ matrix.test-group }})
+        id: run_demos
         run: make demos DEMO_PATH=examples/${{ matrix.test-group }}
