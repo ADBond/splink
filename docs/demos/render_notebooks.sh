@@ -23,6 +23,16 @@ SCRIPT_START=$(date +%s)
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
 
+# Wrap with a 600s timeout if the `timeout` command is available (Linux/CI);
+# falls back to no timeout on macOS without GNU coreutils.
+_timeout() {
+  if command -v timeout &>/dev/null; then
+    timeout 600 "$@"
+  else
+    "$@"
+  fi
+}
+
 pids=()
 files=()
 i=0
@@ -33,7 +43,7 @@ run_notebook() {
   local nb_start nb_end elapsed
 
   nb_start=$(date +%s)
-  if uv run jupytext --to notebook --execute --run-path . --set-kernel python3 --output "$out" "$f" > "$TMP/$idx.log" 2>&1; then
+  if _timeout uv run jupytext --to notebook --execute --run-path . --set-kernel python3 --output "$out" "$f" > "$TMP/$idx.log" 2>&1; then
     nb_end=$(date +%s)
     elapsed=$(( nb_end - nb_start ))
     echo "success:$elapsed" > "$TMP/$idx.result"
