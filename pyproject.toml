@@ -71,16 +71,21 @@ postgres = [
     "psycopg2-binary>=2.9.0",
     "sqlalchemy>=2.0.0",
 ]
+# force pyarrow to be a compatible version for python 3.15
+pyarrow = [
+    "pyarrow>=18.0.0",
+    "pyarrow>=26.0.0; python_version >= '3.15'",
+]
 sqlite = [
     "rapidfuzz>=3.10.0",
 ]
 testing-core = [
     "igraph>=0.11.2",
     "pytest>=7.3",
-    "pyarrow>=15.0.0",
     "networkx>=2.5.1",
     "pytest-cov>=5.0.0",
     "pytest-xdist>=3.0.0",
+    { "include-group" = "pyarrow" },
     { "include-group" = "postgres" },
     { "include-group" = "sqlite" },
 ]
